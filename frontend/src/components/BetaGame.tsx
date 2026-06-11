@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { submitScore } from '../lib/api';
+import type { ScoreResponse } from '../types';
 
 // ─── Stage configs ────────────────────────────────────────────────────────────
 interface StageConfig {
@@ -247,6 +249,155 @@ function fmtTime(ms: number): string {
   return s >= 60 ? `${Math.floor(s / 60)}m ${s % 60}s` : `${s}s`;
 }
 
+function fmtTimeDisplay(totalMs: number): string {
+  const s = Math.max(1, Math.round(totalMs / 1000));
+  const m = Math.floor(s / 60);
+  return `${m}:${(s % 60).toString().padStart(2, '0')}`;
+}
+
+// ─── IQ Result Screen ─────────────────────────────────────────────────────────
+function IQResultScreen({
+  iqResult,
+  stageStats,
+  onPlayAgain,
+  onClose,
+}: {
+  iqResult: IQResult;
+  stageStats: StageStat[];
+  onPlayAgain: () => void;
+  onClose: () => void;
+}) {
+  const [email, setEmail]       = useState('');
+  const [savePhase, setSavePhase] = useState<'idle' | 'saving' | 'saved' | 'no_improvement' | 'not_wishlisted' | 'error'>('idle');
+  const [response, setResponse] = useState<ScoreResponse | null>(null);
+  const [errMsg, setErrMsg]     = useState('');
+
+  const totalMs      = stageStats.reduce((a, s) => a + s.timeMs, 0);
+  const totalSeconds = Math.max(1, Math.round(totalMs / 1000));
+  const timeDisplay  = fmtTimeDisplay(totalMs);
+
+  const labelColor =
+    iqResult.iq >= 130 ? '#FFE500' :
+    iqResult.iq >= 120 ? '#2ECC40' :
+    iqResult.iq >= 110 ? '#4ECDC4' :
+    iqResult.iq >= 90  ? '#fff'    : '#FF2D55';
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim()) return;
+    setSavePhase('saving');
+    try {
+      const res = await submitScore({
+        email: email.trim(),
+        iq: iqResult.iq,
+        time_seconds: totalSeconds,
+        time_display: timeDisplay,
+      });
+      setResponse(res);
+      setSavePhase(res.improved === false ? 'no_improvement' : 'saved');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Erreur inconnue.';
+      if (msg.toLowerCase().includes('wishlist')) {
+        setSavePhase('not_wishlisted');
+      } else {
+        setErrMsg(msg);
+        setSavePhase('error');
+      }
+    }
+  };
+
+  const speedPct    = Math.round(((iqResult.speed    - 45) / 110) * 100);
+  const accuracyPct = Math.round(((iqResult.accuracy - 45) / 110) * 100);
+
+  return (
+    <motion.div key="iqresult" className="gm-screen"
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+    >
+      <div className="gm-screen-box gs-iq-box">
+        <p className="gs-eyebrow">IQ Assessment</p>
+
+        <div className="gs-iq-number" style={{ color: labelColor }}>{iqResult.iq}</div>
+        <div className="gs-iq-label" style={{ color: labelColor }}>{iqResult.label}</div>
+        <div className="gs-iq-percentile">Top {100 - iqResult.percentile}% of all players</div>
+
+        <div className="gs-iq-bars">
+          <div className="gs-iq-bar-row">
+            <span>Speed</span>
+            <div className="gs-iq-track">
+              <div className="gs-iq-fill" style={{ width: `${speedPct}%`, background: '#2ECC40' }} />
+            </div>
+            <span className="gs-iq-val">{iqResult.speed}</span>
+          </div>
+          <div className="gs-iq-bar-row">
+            <span>Accuracy</span>
+            <div className="gs-iq-track">
+              <div className="gs-iq-fill" style={{ width: `${accuracyPct}%`, background: '#FF2D55' }} />
+            </div>
+            <span className="gs-iq-val">{iqResult.accuracy}</span>
+          </div>
+        </div>
+
+        <div className="gs-iq-time">Total time: {timeDisplay}</div>
+
+        {savePhase === 'idle' && (
+          <form className="gs-save-form" onSubmit={handleSave}>
+            <p className="gs-save-hint">Save to global leaderboard</p>
+            <div className="gs-save-field">
+              <input
+                type="email"
+                placeholder="Your wishlist email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="gs-save-input"
+                required
+                autoComplete="email"
+              />
+              <button type="submit" className="gs-save-submit">SAVE</button>
+            </div>
+          </form>
+        )}
+
+        {savePhase === 'saving' && (
+          <p className="gs-save-status">Saving score...</p>
+        )}
+
+        {savePhase === 'saved' && response && (
+          <div className="gs-save-success">
+            <div className="gs-save-rank">#{response.rank}</div>
+            <p className="gs-save-msg">
+              {response.improved ? 'New personal best!' : 'Score saved!'}<br />
+              Welcome to the board, <strong>{response.name}</strong>.
+            </p>
+          </div>
+        )}
+
+        {savePhase === 'no_improvement' && response && (
+          <div className="gs-save-notice">
+            <p>Your previous score of <strong>{response.iq}</strong> is higher — keep pushing!</p>
+          </div>
+        )}
+
+        {savePhase === 'not_wishlisted' && (
+          <div className="gs-save-notice">
+            <p>Join the wishlist first to save your score to the leaderboard.</p>
+          </div>
+        )}
+
+        {savePhase === 'error' && (
+          <div className="gs-save-notice gs-save-notice-err">
+            <p>{errMsg || 'Error saving score. Try again.'}</p>
+          </div>
+        )}
+
+        <div className="gs-btn-row">
+          <button className="gs-cta" onClick={onPlayAgain}>PLAY AGAIN</button>
+          <button className="gs-cta gs-cta-outline" onClick={onClose}>CLOSE</button>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 type Phase = 'intro' | 'playing' | 'stageclear' | 'victory' | 'iqresult';
 interface Pos { x: number; y: number; }
@@ -301,11 +452,12 @@ export default function BetaGame({ onClose }: { onClose: () => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const gs = useRef<GS>(INIT);
 
-  const [phase, setPhase]       = useState<Phase>('intro');
-  const [stageIdx, setStageIdx] = useState(0);
-  const [winner, setWinner]     = useState<1 | 2 | null>(null);
-  const [elapsed, setElapsed]   = useState(0);      // ms, updated each second
-  const [iqResult, setIqResult] = useState<IQResult | null>(null);
+  const [phase, setPhase]           = useState<Phase>('intro');
+  const [stageIdx, setStageIdx]     = useState(0);
+  const [winner, setWinner]         = useState<1 | 2 | null>(null);
+  const [elapsed, setElapsed]       = useState(0);
+  const [iqResult, setIqResult]     = useState<IQResult | null>(null);
+  const [stageStats, setStageStats] = useState<StageStat[]>([]);
 
   const startStage = useCallback((idx: number, prevStats: StageStat[] = []) => {
     const state = initStage(idx);
@@ -320,12 +472,13 @@ export default function BetaGame({ onClose }: { onClose: () => void }) {
   const startGame = useCallback(() => startStage(0), [startStage]);
 
   const advanceStage = useCallback(() => {
-    const next = gs.current.stageIdx + 1;
+    const next  = gs.current.stageIdx + 1;
     const stats = gs.current.stageStats;
     if (next < BASE_STAGES.length) {
       startStage(next, stats);
     } else {
       const result = calcIQ(stats);
+      setStageStats(stats);
       setIqResult(result);
       gs.current.phase = 'iqresult';
       setPhase('iqresult');
@@ -453,7 +606,9 @@ export default function BetaGame({ onClose }: { onClose: () => void }) {
   useEffect(() => {
     if (phase === 'victory') {
       const t = setTimeout(() => {
-        const result = calcIQ(gs.current.stageStats);
+        const stats  = gs.current.stageStats;
+        const result = calcIQ(stats);
+        setStageStats(stats);
         setIqResult(result);
         gs.current.phase = 'iqresult';
         setPhase('iqresult');
@@ -603,58 +758,12 @@ export default function BetaGame({ onClose }: { onClose: () => void }) {
 
             {/* IQ Result */}
             {phase === 'iqresult' && iqResult && (
-              <motion.div key="iqresult" className="gm-screen"
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              >
-                <div className="gm-screen-box gm-iq-box">
-                  <p className="gs-eyebrow">Spatial IQ Estimate</p>
-                  <div className="gm-iq-number">{iqResult.iq}</div>
-                  <div className="gm-iq-label" style={{
-                    color: iqResult.iq >= 120 ? '#2ECC40' : iqResult.iq >= 100 ? '#FFE500' : '#FF2D55'
-                  }}>
-                    {iqResult.label}
-                  </div>
-                  <div className="gm-iq-percentile">Top {100 - iqResult.percentile}% &nbsp;&middot;&nbsp; {iqResult.percentile}th percentile</div>
-
-                  <div className="gm-iq-bars">
-                    <div className="gm-iq-bar-row">
-                      <span>Processing Speed</span>
-                      <div className="gm-iq-track">
-                        <motion.div
-                          className="gm-iq-fill"
-                          style={{ background: '#2ECC40' }}
-                          initial={{ width: 0 }}
-                          animate={{ width: `${Math.min(100, ((iqResult.speed - 40) / 115) * 100)}%` }}
-                          transition={{ duration: 1.2, ease: 'easeOut' }}
-                        />
-                      </div>
-                      <span className="gm-iq-val">{iqResult.speed}</span>
-                    </div>
-                    <div className="gm-iq-bar-row">
-                      <span>Spatial Accuracy</span>
-                      <div className="gm-iq-track">
-                        <motion.div
-                          className="gm-iq-fill"
-                          style={{ background: '#1E6EFF' }}
-                          initial={{ width: 0 }}
-                          animate={{ width: `${Math.min(100, ((iqResult.accuracy - 40) / 115) * 100)}%` }}
-                          transition={{ duration: 1.2, ease: 'easeOut', delay: 0.2 }}
-                        />
-                      </div>
-                      <span className="gm-iq-val">{iqResult.accuracy}</span>
-                    </div>
-                  </div>
-
-                  <p className="gm-iq-disclaimer">
-                    Entertainment estimate only &mdash; not a clinical assessment
-                  </p>
-
-                  <div className="gs-btn-row">
-                    <button className="gs-cta" onClick={startGame}>&#8635; PLAY AGAIN</button>
-                    <button className="gs-cta gs-cta-outline" onClick={onClose}>EXIT</button>
-                  </div>
-                </div>
-              </motion.div>
+              <IQResultScreen
+                iqResult={iqResult}
+                stageStats={stageStats}
+                onPlayAgain={startGame}
+                onClose={onClose}
+              />
             )}
           </AnimatePresence>
         </div>

@@ -607,6 +607,96 @@ footer { background: var(--black); border-top: 3px solid var(--yellow); padding:
 }
 .gs-cta-outline:hover { background: rgba(255,255,255,.08); transform: none; box-shadow: none; }
 
+/* IQ Result Screen */
+.gs-iq-box { max-width: 420px; width: 100%; }
+.gs-iq-number {
+  font-family: 'Lilita One', cursive; font-size: 80px; line-height: 1;
+  text-shadow: 4px 4px 0 rgba(0,0,0,.5);
+}
+.gs-iq-label {
+  font-family: 'Lilita One', cursive; font-size: 20px;
+  text-transform: uppercase; letter-spacing: 1px;
+}
+.gs-iq-percentile {
+  font-family: 'Share Tech Mono', monospace; font-size: 12px;
+  color: rgba(255,255,255,.5); letter-spacing: 1px;
+}
+.gs-iq-bars { width: 100%; display: flex; flex-direction: column; gap: 8px; margin: 4px 0; }
+.gs-iq-bar-row {
+  display: grid; grid-template-columns: 74px 1fr 34px;
+  align-items: center; gap: 10px;
+  font-family: 'Share Tech Mono', monospace; font-size: 12px;
+  color: rgba(255,255,255,.6);
+}
+.gs-iq-track {
+  height: 8px; background: rgba(255,255,255,.1);
+  border-radius: 0; overflow: hidden;
+}
+.gs-iq-fill {
+  height: 100%; border-radius: 0;
+  transition: width .6s cubic-bezier(.4,0,.2,1);
+}
+.gs-iq-val {
+  font-family: 'Lilita One', cursive; font-size: 14px; color: #fff;
+  text-align: right;
+}
+.gs-iq-time {
+  font-family: 'Share Tech Mono', monospace; font-size: 12px;
+  color: rgba(255,229,0,.7); letter-spacing: 1px;
+}
+
+/* Save form */
+.gs-save-form { width: 100%; display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+.gs-save-hint {
+  font-family: 'Share Tech Mono', monospace; font-size: 11px;
+  color: rgba(255,255,255,.45); letter-spacing: 1px; text-transform: uppercase;
+  margin: 0;
+}
+.gs-save-field { display: flex; gap: 0; width: 100%; }
+.gs-save-input {
+  flex: 1; background: #111; border: 2px solid rgba(255,229,0,.3);
+  border-right: none; color: #fff; padding: 10px 14px;
+  font-family: 'Share Tech Mono', monospace; font-size: 13px;
+  outline: none; min-width: 0;
+}
+.gs-save-input:focus { border-color: rgba(255,229,0,.7); }
+.gs-save-input::placeholder { color: rgba(255,255,255,.3); }
+.gs-save-submit {
+  font-family: 'Lilita One', cursive; font-size: 14px;
+  background: var(--yellow); color: var(--black);
+  border: 2px solid rgba(255,229,0,.3); padding: 10px 18px;
+  text-transform: uppercase; letter-spacing: 1px;
+  transition: background .13s;
+  white-space: nowrap;
+}
+.gs-save-submit:hover { background: #ffe500cc; }
+
+.gs-save-status {
+  font-family: 'Share Tech Mono', monospace; font-size: 12px;
+  color: rgba(255,229,0,.7); letter-spacing: 2px; text-transform: uppercase;
+}
+.gs-save-success {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 16px 24px; border: 2px solid var(--yellow); background: rgba(255,229,0,.07);
+  width: 100%;
+}
+.gs-save-rank {
+  font-family: 'Lilita One', cursive; font-size: 42px; color: var(--yellow);
+  line-height: 1; text-shadow: 3px 3px 0 rgba(0,0,0,.5);
+}
+.gs-save-msg {
+  font-size: 13px; color: rgba(255,255,255,.75); line-height: 1.5; margin: 0;
+}
+.gs-save-msg strong { color: #fff; }
+.gs-save-notice {
+  padding: 12px 18px; border: 2px solid rgba(255,255,255,.15);
+  background: rgba(255,255,255,.05); width: 100%;
+  font-size: 13px; color: rgba(255,255,255,.65); line-height: 1.5;
+}
+.gs-save-notice p { margin: 0; }
+.gs-save-notice strong { color: var(--yellow); }
+.gs-save-notice-err { border-color: rgba(255,45,85,.4); background: rgba(255,45,85,.07); }
+
 /* Stage selector on intro screen */
 .gs-stages-row { display: flex; gap: 12px; margin: 2px 0; }
 .gs-stage-pip {
