@@ -1,4 +1,4 @@
-import type { Character, Feature, RoadmapItem, PressQuote } from '../types';
+import type { Character, Feature, RoadmapItem, PressQuote, LeaderboardEntry } from '../types';
 
 export const FEATURES: Feature[] = [
   {
@@ -123,6 +123,19 @@ export const PRESS_QUOTES: PressQuote[] = [
     score: '10',
     source: 'Blob Brain Gazette',
   },
+];
+
+export const LEADERBOARD: LeaderboardEntry[] = [
+  { rank: 1,  name: 'NeuralNinja',  region: 'JP', iq: 148, time: '2:34', blobId: 2 },
+  { rank: 2,  name: 'MazeMaster',   region: 'DE', iq: 145, time: '2:41', blobId: 1 },
+  { rank: 3,  name: 'BlobCrusher',  region: 'US', iq: 142, time: '2:58', blobId: 3 },
+  { rank: 4,  name: 'SpatialKing',  region: 'KR', iq: 139, time: '3:12', blobId: 1 },
+  { rank: 5,  name: 'QuickBrain',   region: 'FR', iq: 137, time: '3:28', blobId: 4 },
+  { rank: 6,  name: 'PuzzlePro',    region: 'BR', iq: 135, time: '3:45', blobId: 2 },
+  { rank: 7,  name: 'IQHunter',     region: 'AU', iq: 132, time: '3:57', blobId: 3 },
+  { rank: 8,  name: 'MazeRacer',    region: 'GB', iq: 130, time: '4:02', blobId: 1 },
+  { rank: 9,  name: 'LogicLord',    region: 'CA', iq: 128, time: '4:18', blobId: 4 },
+  { rank: 10, name: 'BrainBlast',   region: 'IT', iq: 125, time: '4:33', blobId: 2 },
 ];
 
 export const TICKER_ITEMS = [
