@@ -25,6 +25,15 @@ export interface RoadmapItem {
   done: boolean;
 }
 
+export interface LeaderboardEntry {
+  rank: number;
+  name: string;
+  region: string;
+  iq: number;
+  time: string;
+  blobId: number;
+}
+
 export interface PressQuote {
   id: number;
   quote: string;

@@ -7,7 +7,8 @@ import BetaGame from './BetaGame';
 const links = [
   { href: '#features', label: 'Features' },
   { href: '#characters', label: 'Characters' },
-  { href: '#press', label: 'Press' },
+  { href: '#leaderboard', label: 'Leaderboard' },
+  { href: '#multiplayer', label: 'Multiplayer' },
   { href: '#roadmap', label: 'Roadmap' },
 ];
 
