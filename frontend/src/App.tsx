@@ -1,4 +1,5 @@
 import CustomCursor from './components/CustomCursor';
+import InstallPrompt from './components/InstallPrompt';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import Ticker from './components/Ticker';
@@ -26,6 +27,7 @@ export default function App() {
         <Roadmap />
       </main>
       <Footer />
+      <InstallPrompt />
     </>
   );
 }

@@ -607,6 +607,140 @@ footer { background: var(--black); border-top: 3px solid var(--yellow); padding:
 }
 .gs-cta-outline:hover { background: rgba(255,255,255,.08); transform: none; box-shadow: none; }
 
+/* Character Select */
+.cs-box { max-width: 360px; width: 100%; gap: 10px; }
+.cs-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 8px; width: 100%;
+}
+.cs-card {
+  position: relative;
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+  padding: 12px 8px 10px; width: 100%;
+  background: rgba(255,255,255,.05);
+  border: 2px solid rgba(255,255,255,.12);
+  transition: border-color .13s, background .13s, transform .1s;
+  cursor: pointer;
+}
+.cs-card:hover {
+  border-color: var(--cs-color);
+  background: rgba(255,255,255,.09);
+  transform: translateY(-2px);
+}
+.cs-card-p1 {
+  border-color: var(--cs-color) !important;
+  box-shadow: 0 0 14px -3px var(--cs-color);
+}
+.cs-card-p2 {
+  border-color: var(--cs-color) !important;
+  box-shadow: 0 0 14px -3px var(--cs-color);
+}
+.cs-name {
+  font-family: 'Lilita One', cursive; font-size: 12px;
+  color: #fff; text-transform: uppercase; letter-spacing: 1px;
+}
+.cs-badge {
+  position: absolute; top: -1px; left: -1px;
+  font-family: 'Lilita One', cursive; font-size: 9px;
+  color: #000; padding: 1px 6px; letter-spacing: .5px; line-height: 16px;
+}
+.cs-badge-p2 { left: auto; right: -1px; }
+.cs-badge-p2-shift { top: 18px; }
+.cs-hint {
+  font-family: 'Share Tech Mono', monospace; font-size: 10px;
+  color: rgba(255,255,255,.4); letter-spacing: 1px; margin: 0;
+}
+
+/* IQ Result Screen */
+.gs-iq-box { max-width: 420px; width: 100%; }
+.gs-iq-number {
+  font-family: 'Lilita One', cursive; font-size: 80px; line-height: 1;
+  text-shadow: 4px 4px 0 rgba(0,0,0,.5);
+}
+.gs-iq-label {
+  font-family: 'Lilita One', cursive; font-size: 20px;
+  text-transform: uppercase; letter-spacing: 1px;
+}
+.gs-iq-percentile {
+  font-family: 'Share Tech Mono', monospace; font-size: 12px;
+  color: rgba(255,255,255,.5); letter-spacing: 1px;
+}
+.gs-iq-bars { width: 100%; display: flex; flex-direction: column; gap: 8px; margin: 4px 0; }
+.gs-iq-bar-row {
+  display: grid; grid-template-columns: 74px 1fr 34px;
+  align-items: center; gap: 10px;
+  font-family: 'Share Tech Mono', monospace; font-size: 12px;
+  color: rgba(255,255,255,.6);
+}
+.gs-iq-track {
+  height: 8px; background: rgba(255,255,255,.1);
+  border-radius: 0; overflow: hidden;
+}
+.gs-iq-fill {
+  height: 100%; border-radius: 0;
+  transition: width .6s cubic-bezier(.4,0,.2,1);
+}
+.gs-iq-val {
+  font-family: 'Lilita One', cursive; font-size: 14px; color: #fff;
+  text-align: right;
+}
+.gs-iq-time {
+  font-family: 'Share Tech Mono', monospace; font-size: 12px;
+  color: rgba(255,229,0,.7); letter-spacing: 1px;
+}
+
+/* Save form */
+.gs-save-form { width: 100%; display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+.gs-save-hint {
+  font-family: 'Share Tech Mono', monospace; font-size: 11px;
+  color: rgba(255,255,255,.45); letter-spacing: 1px; text-transform: uppercase;
+  margin: 0;
+}
+.gs-save-field { display: flex; gap: 0; width: 100%; }
+.gs-save-input {
+  flex: 1; background: #111; border: 2px solid rgba(255,229,0,.3);
+  border-right: none; color: #fff; padding: 10px 14px;
+  font-family: 'Share Tech Mono', monospace; font-size: 13px;
+  outline: none; min-width: 0;
+}
+.gs-save-input:focus { border-color: rgba(255,229,0,.7); }
+.gs-save-input::placeholder { color: rgba(255,255,255,.3); }
+.gs-save-submit {
+  font-family: 'Lilita One', cursive; font-size: 14px;
+  background: var(--yellow); color: var(--black);
+  border: 2px solid rgba(255,229,0,.3); padding: 10px 18px;
+  text-transform: uppercase; letter-spacing: 1px;
+  transition: background .13s;
+  white-space: nowrap;
+}
+.gs-save-submit:hover { background: #ffe500cc; }
+
+.gs-save-status {
+  font-family: 'Share Tech Mono', monospace; font-size: 12px;
+  color: rgba(255,229,0,.7); letter-spacing: 2px; text-transform: uppercase;
+}
+.gs-save-success {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 16px 24px; border: 2px solid var(--yellow); background: rgba(255,229,0,.07);
+  width: 100%;
+}
+.gs-save-rank {
+  font-family: 'Lilita One', cursive; font-size: 42px; color: var(--yellow);
+  line-height: 1; text-shadow: 3px 3px 0 rgba(0,0,0,.5);
+}
+.gs-save-msg {
+  font-size: 13px; color: rgba(255,255,255,.75); line-height: 1.5; margin: 0;
+}
+.gs-save-msg strong { color: #fff; }
+.gs-save-notice {
+  padding: 12px 18px; border: 2px solid rgba(255,255,255,.15);
+  background: rgba(255,255,255,.05); width: 100%;
+  font-size: 13px; color: rgba(255,255,255,.65); line-height: 1.5;
+}
+.gs-save-notice p { margin: 0; }
+.gs-save-notice strong { color: var(--yellow); }
+.gs-save-notice-err { border-color: rgba(255,45,85,.4); background: rgba(255,45,85,.07); }
+
 /* Stage selector on intro screen */
 .gs-stages-row { display: flex; gap: 12px; margin: 2px 0; }
 .gs-stage-pip {
@@ -956,6 +1090,41 @@ footer { background: var(--black); border-top: 3px solid var(--yellow); padding:
   display: flex; align-items: center; gap: 8px;
 }
 .mp-cta-btn:hover { transform: translate(-3px,-3px); box-shadow: 8px 8px 0 var(--black); }
+
+/* ── PWA Install Banner ── */
+.pwa-banner {
+  position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
+  z-index: 900; width: calc(100% - 32px); max-width: 480px;
+  background: var(--black); border: 3px solid var(--yellow);
+  box-shadow: 6px 6px 0 rgba(255,229,0,.2);
+  display: flex; align-items: center; gap: 12px; padding: 14px 16px;
+}
+.pwa-banner-icon { flex-shrink: 0; border: 2px solid rgba(255,229,0,.2); }
+.pwa-banner-icon img { display: block; }
+.pwa-banner-text { flex: 1; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.pwa-banner-title {
+  font-family: 'Lilita One', cursive; font-size: 15px;
+  color: var(--yellow); text-transform: uppercase; letter-spacing: .5px;
+}
+.pwa-banner-sub {
+  font-family: 'Share Tech Mono', monospace; font-size: 10px;
+  color: rgba(255,255,255,.4); text-transform: uppercase; letter-spacing: 1px;
+}
+.pwa-banner-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.pwa-install-btn {
+  font-family: 'Lilita One', cursive; font-size: 13px; color: var(--black);
+  background: var(--yellow); border: 2px solid var(--black);
+  padding: 7px 16px; text-transform: uppercase; letter-spacing: 1px;
+  box-shadow: 3px 3px 0 rgba(255,229,0,.2);
+  transition: transform .1s, box-shadow .1s;
+}
+.pwa-install-btn:hover { transform: translate(-2px,-2px); box-shadow: 5px 5px 0 rgba(255,229,0,.2); }
+.pwa-dismiss-btn {
+  background: none; border: 2px solid rgba(255,255,255,.15); color: rgba(255,255,255,.4);
+  width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;
+  font-size: 14px; transition: border-color .15s, color .15s;
+}
+.pwa-dismiss-btn:hover { border-color: var(--yellow); color: var(--yellow); }
 
 /* ── Scroll reveal ── */
 .reveal { opacity: 0; transform: translateY(28px); transition: opacity .55s ease, transform .55s ease; }

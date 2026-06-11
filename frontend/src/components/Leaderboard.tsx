@@ -1,5 +1,6 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { LEADERBOARD, CHARACTERS } from '../data/gameData';
+import { fetchLeaderboard } from '../lib/api';
 import { useScrollReveal } from '../hooks/useScrollReveal';
 import { BlobSvg } from './Hero';
 import type { LeaderboardEntry } from '../types';
@@ -12,7 +13,7 @@ function getBlobProps(blobId: number) {
   return { color: c.color, svgColor: c.svgColor, svgDark: c.svgDark };
 }
 
-function IQBar({ iq, max = 148 }: { iq: number; max?: number }) {
+function IQBar({ iq, max = 155 }: { iq: number; max?: number }) {
   const fillRef = useRef<HTMLDivElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
 
@@ -57,7 +58,7 @@ function PodiumCard({ entry, position }: { entry: LeaderboardEntry; position: nu
         <BlobSvg color={blob.svgColor} dark={blob.svgDark} size={64} />
       </div>
       <div className="lb-card-name">{entry.name}</div>
-      <div className="lb-card-region">{entry.region}</div>
+      {entry.region !== '--' && <div className="lb-card-region">{entry.region}</div>}
       <div className="lb-card-iq" style={{ color: medal }}>{entry.iq}</div>
       <div className="lb-card-iq-label">IQ SCORE</div>
       <div className="lb-card-time">
@@ -81,7 +82,7 @@ function TableRow({ entry }: { entry: LeaderboardEntry }) {
         <BlobSvg color={blob.svgColor} dark={blob.svgDark} size={28} />
       </div>
       <span className="lb-row-name">{entry.name}</span>
-      <span className="lb-row-region">{entry.region}</span>
+      <span className="lb-row-region">{entry.region !== '--' ? entry.region : ''}</span>
       <div className="lb-row-bar">
         <IQBar iq={entry.iq} />
       </div>
@@ -91,32 +92,70 @@ function TableRow({ entry }: { entry: LeaderboardEntry }) {
   );
 }
 
+function apiToEntry(
+  raw: { name: string; iq: number; time_display: string },
+  idx: number,
+): LeaderboardEntry {
+  return {
+    rank: idx + 1,
+    name: raw.name,
+    region: '--',
+    iq: raw.iq,
+    time: raw.time_display,
+    blobId: (idx % 2) + 1,
+  };
+}
+
 const PODIUM_ORDER = [1, 0, 2]; // silver left, gold center, bronze right
 
 export default function Leaderboard() {
   const titleRef = useScrollReveal<HTMLHeadingElement>();
-  const tagRef = useScrollReveal<HTMLParagraphElement>();
+  const tagRef   = useScrollReveal<HTMLParagraphElement>();
+
+  const [entries, setEntries] = useState<LeaderboardEntry[]>(LEADERBOARD);
+  const [isLive, setIsLive]   = useState(false);
+
+  useEffect(() => {
+    fetchLeaderboard()
+      .then((data) => {
+        if (data.length > 0) {
+          setEntries(data.map(apiToEntry));
+          setIsLive(true);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const maxIq = entries.length > 0 ? entries[0].iq : 148;
+
+  const podiumEntries = PODIUM_ORDER
+    .filter(pos => entries[pos] !== undefined)
+    .map(pos => ({ entry: entries[pos], position: pos }));
+
+  const tableEntries = entries.slice(3);
 
   return (
     <section className="leaderboard" id="leaderboard">
       <div className="lb-inner">
         <div className="lb-header">
           <p className="sec-tag lb-tag reveal" ref={tagRef}>
-            Live Rankings
+            {isLive ? 'Live Rankings' : 'Rankings'}
           </p>
           <h2 className="sec-h lb-h reveal" ref={titleRef}>
             GLOBAL <span>IQ</span> LEADERBOARD
           </h2>
           <p className="lb-subtitle">
-            4,821 players ranked worldwide — can you crack the top 10?
+            Can you crack the top 10?
           </p>
         </div>
 
-        <div className="lb-podium">
-          {PODIUM_ORDER.map(pos => (
-            <PodiumCard key={pos} entry={LEADERBOARD[pos]} position={pos} />
-          ))}
-        </div>
+        {entries.length >= 3 && (
+          <div className="lb-podium">
+            {podiumEntries.map(({ entry, position }) => (
+              <PodiumCard key={entry.name + entry.rank} entry={entry} position={position} />
+            ))}
+          </div>
+        )}
 
         <div className="lb-table">
           <div className="lb-table-head">
@@ -128,8 +167,8 @@ export default function Leaderboard() {
             <span></span>
             <span>Time</span>
           </div>
-          {LEADERBOARD.slice(3).map(entry => (
-            <TableRow key={entry.rank} entry={entry} />
+          {tableEntries.map(entry => (
+            <TableRow key={entry.name + entry.rank} entry={entry} />
           ))}
           <div className="lb-row lb-row-you">
             <span className="lb-row-rank lb-you-rank">?</span>
@@ -139,7 +178,7 @@ export default function Leaderboard() {
               </svg>
             </div>
             <span className="lb-row-name lb-you-name">YOUR NAME</span>
-            <span className="lb-row-region">??</span>
+            <span className="lb-row-region"></span>
             <div className="lb-row-bar">
               <div className="lb-iq-track lb-you-track">
                 <div className="lb-you-bar-pulse" />
@@ -152,7 +191,7 @@ export default function Leaderboard() {
 
         <div className="lb-cta-row">
           <p className="lb-cta-text">
-            Top score is IQ 148 — what's yours?
+            Top score is IQ {maxIq} — what's yours?
           </p>
           <button
             className="lb-cta-btn"

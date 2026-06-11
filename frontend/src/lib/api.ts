@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { WishlistPayload, ApiResponse, Character } from '../types';
+import type { WishlistPayload, ApiResponse, Character, ScorePayload, ScoreResponse } from '../types';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL ?? 'http://localhost:8000/api',
@@ -22,6 +22,16 @@ export async function submitWishlist(payload: WishlistPayload): Promise<ApiRespo
 
 export async function fetchCharacters(): Promise<Character[]> {
   const { data } = await api.get<ApiResponse<Character[]>>('/characters');
+  return data.data;
+}
+
+export async function submitScore(payload: ScorePayload): Promise<ScoreResponse> {
+  const { data } = await api.post<ScoreResponse>('/scores', payload);
+  return data;
+}
+
+export async function fetchLeaderboard(): Promise<{ name: string; iq: number; time_display: string }[]> {
+  const { data } = await api.get<ApiResponse<{ name: string; iq: number; time_display: string }[]>>('/leaderboard');
   return data.data;
 }
 
