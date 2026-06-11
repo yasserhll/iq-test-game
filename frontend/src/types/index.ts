@@ -34,6 +34,22 @@ export interface LeaderboardEntry {
   blobId: number;
 }
 
+export interface ScorePayload {
+  email: string;
+  iq: number;
+  time_seconds: number;
+  time_display: string;
+}
+
+export interface ScoreResponse {
+  message: string;
+  name?: string;
+  iq?: number;
+  rank?: number;
+  improved?: boolean;
+  code?: string;
+}
+
 export interface PressQuote {
   id: number;
   quote: string;
