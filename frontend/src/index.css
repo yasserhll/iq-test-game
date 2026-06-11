@@ -709,6 +709,7 @@ footer { background: var(--black); border-top: 3px solid var(--yellow); padding:
 @media (max-width: 768px) {
   .nav-links { display: none; }
   .nav-hamburger { display: flex; }
+  .nav-wishlist-desktop { display: none; }
   .nav { padding: 12px 20px; }
 
   .hero { padding: 100px 20px 60px; gap: 0; }

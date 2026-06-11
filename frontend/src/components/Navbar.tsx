@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import WishlistModal from './WishlistModal';
 import BetaGame from './BetaGame';
 import { BlobSvg } from './Hero';
 
@@ -11,6 +12,7 @@ const links = [
 ];
 
 export default function Navbar() {
+  const [modalOpen, setModalOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [betaOpen, setBetaOpen] = useState(false);
   const [mobileWarn, setMobileWarn] = useState(false);
@@ -55,6 +57,13 @@ export default function Navbar() {
             Try Beta
           </button>
 
+          <button className="nav-cta nav-wishlist-desktop" onClick={() => setModalOpen(true)}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+            </svg>
+            Wishlist
+          </button>
+
           <button
             className="nav-hamburger"
             onClick={() => setMenuOpen(v => !v)}
@@ -87,6 +96,12 @@ export default function Navbar() {
                   <path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 7H8v3H6v-3H3v-2h3V8h2v3h3v2zm4.5 2c-.83 0-1.5-.67-1.5-1.5S14.67 12 15.5 12s1.5.67 1.5 1.5S16.33 15 15.5 15zm3-3c-.83 0-1.5-.67-1.5-1.5S17.67 9 18.5 9s1.5.67 1.5 1.5S19.33 12 18.5 12z" />
                 </svg>
                 Try Beta
+              </button>
+              <button className="drawer-cta" onClick={() => { setModalOpen(true); close(); }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                </svg>
+                Wishlist
               </button>
             </div>
           </motion.div>
@@ -121,6 +136,10 @@ export default function Navbar() {
             </motion.div>
           </motion.div>
         )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {modalOpen && <WishlistModal onClose={() => setModalOpen(false)} />}
       </AnimatePresence>
 
       <AnimatePresence>
