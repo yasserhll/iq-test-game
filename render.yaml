@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: blob-bash-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: APP_KEY
+        generateValue: true
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_URL
+        fromDatabase:
+          name: blob-bash-db
+          property: connectionString
+      - key: SESSION_DRIVER
+        value: cookie
+      - key: CACHE_STORE
+        value: array
+      - key: QUEUE_CONNECTION
+        value: sync
+      - key: LOG_CHANNEL
+        value: stderr
+
+databases:
+  - name: blob-bash-db
+    plan: free

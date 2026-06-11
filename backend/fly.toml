@@ -1,0 +1,41 @@
+app = "blob-bash-api"
+primary_region = "cdg"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  APP_ENV = "production"
+  APP_DEBUG = "false"
+  DB_CONNECTION = "sqlite"
+  DB_DATABASE = "/data/database.sqlite"
+  SESSION_DRIVER = "cookie"
+  CACHE_STORE = "array"
+  QUEUE_CONNECTION = "sync"
+  LOG_CHANNEL = "stderr"
+
+[mounts]
+  source = "blob_bash_data"
+  destination = "/data"
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 80
+
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]
+
+  [services.concurrency]
+    type = "connections"
+    hard_limit = 25
+    soft_limit = 20
+
+  [[services.tcp_checks]]
+    interval = "15s"
+    timeout = "2s"
+    grace_period = "30s"
