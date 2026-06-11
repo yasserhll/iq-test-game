@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { submitScore } from '../lib/api';
-import type { ScoreResponse } from '../types';
+import { CHARACTERS } from '../data/gameData';
+import { BlobSvg } from './Hero';
+import type { ScoreResponse, Character } from '../types';
 
 // ─── Stage configs ────────────────────────────────────────────────────────────
 interface StageConfig {
@@ -399,7 +401,7 @@ function IQResultScreen({
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
-type Phase = 'intro' | 'playing' | 'stageclear' | 'victory' | 'iqresult';
+type Phase = 'charselect' | 'intro' | 'playing' | 'stageclear' | 'victory' | 'iqresult';
 interface Pos { x: number; y: number; }
 interface IQResult { speed: number; accuracy: number; iq: number; percentile: number; label: string; }
 
@@ -418,9 +420,18 @@ interface GS {
   optimalMoves: number;
   stageStats: StageStat[];
   elapsedMs: number;
+  p1Color: string; p1Dark: string;
+  p2Color: string; p2Dark: string;
 }
 
-function initStage(stageIdx: number): GS {
+const DEFAULT_P1 = CHARACTERS[0];
+const DEFAULT_P2 = CHARACTERS[1];
+
+function initStage(
+  stageIdx: number,
+  p1: Character = DEFAULT_P1,
+  p2: Character = DEFAULT_P2,
+): GS {
   const cfg = BASE_STAGES[stageIdx];
   const cell = computeCell(cfg.cols, cfg.rows, cfg.maxCell);
   const maze = buildMaze(cfg.cols, cfg.rows, cfg.seed);
@@ -441,41 +452,56 @@ function initStage(stageIdx: number): GS {
     optimalMoves: opt,
     stageStats: [],
     elapsedMs: 0,
+    p1Color: p1.svgColor, p1Dark: p1.svgDark,
+    p2Color: p2.svgColor, p2Dark: p2.svgDark,
   };
 }
 
 const INIT = initStage(0);
-// Pre-compute to avoid recomputation (we override on startStage)
-INIT.phase = 'intro';
+INIT.phase = 'charselect';
 
 export default function BetaGame({ onClose }: { onClose: () => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const gs = useRef<GS>(INIT);
 
-  const [phase, setPhase]           = useState<Phase>('intro');
+  const [phase, setPhase]           = useState<Phase>('charselect');
   const [stageIdx, setStageIdx]     = useState(0);
   const [winner, setWinner]         = useState<1 | 2 | null>(null);
   const [elapsed, setElapsed]       = useState(0);
   const [iqResult, setIqResult]     = useState<IQResult | null>(null);
   const [stageStats, setStageStats] = useState<StageStat[]>([]);
+  const [p1Char, setP1Char]         = useState<Character>(DEFAULT_P1);
+  const [p2Char, setP2Char]         = useState<Character>(DEFAULT_P2);
 
-  const startStage = useCallback((idx: number, prevStats: StageStat[] = []) => {
-    const state = initStage(idx);
+  const startStage = useCallback((idx: number, prevStats: StageStat[] = [], c1 = p1Char, c2 = p2Char) => {
+    const state = initStage(idx, c1, c2);
     state.stageStats = prevStats;
     gs.current = state;
     setStageIdx(idx);
     setWinner(null);
     setElapsed(0);
     setPhase('playing');
+  }, [p1Char, p2Char]);
+
+  const startGame = useCallback(() => {
+    gs.current.phase = 'intro';
+    setPhase('intro');
   }, []);
 
-  const startGame = useCallback(() => startStage(0), [startStage]);
+  const confirmChars = useCallback(() => {
+    gs.current.p1Color = p1Char.svgColor;
+    gs.current.p1Dark  = p1Char.svgDark;
+    gs.current.p2Color = p2Char.svgColor;
+    gs.current.p2Dark  = p2Char.svgDark;
+    gs.current.phase   = 'intro';
+    setPhase('intro');
+  }, [p1Char, p2Char]);
 
   const advanceStage = useCallback(() => {
     const next  = gs.current.stageIdx + 1;
     const stats = gs.current.stageStats;
     if (next < BASE_STAGES.length) {
-      startStage(next, stats);
+      startStage(next, stats, p1Char, p2Char);
     } else {
       const result = calcIQ(stats);
       setStageStats(stats);
@@ -483,7 +509,7 @@ export default function BetaGame({ onClose }: { onClose: () => void }) {
       gs.current.phase = 'iqresult';
       setPhase('iqresult');
     }
-  }, [startStage]);
+  }, [startStage, p1Char, p2Char]);
 
   // ── Game loop ──────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -587,8 +613,8 @@ export default function BetaGame({ onClose }: { onClose: () => void }) {
       ctx.fillRect(0, 0, CW, CH);
       renderMaze(ctx, state.maze, cfg.cols, cfg.rows, cell);
       renderExit(ctx, cfg.cols, cell, t);
-      renderPixelBlob(ctx, state.p1, '#2ECC40', '#1aab2e', cell);
-      renderPixelBlob(ctx, state.p2, '#FF2D55', '#b01f3b', cell);
+      renderPixelBlob(ctx, state.p1, state.p1Color, state.p1Dark, cell);
+      renderPixelBlob(ctx, state.p2, state.p2Color, state.p2Dark, cell);
 
       raf = requestAnimationFrame(loop);
     };
@@ -646,15 +672,15 @@ export default function BetaGame({ onClose }: { onClose: () => void }) {
         {/* HUD */}
         <div className="gm-hud">
           <div className="gm-player">
-            <div className="gm-dot" style={{ background: '#2ECC40' }} />
+            <div className="gm-dot" style={{ background: p1Char.svgColor }} />
             <div>
-              <div className="gm-pname">GLOOB <span>P1</span></div>
+              <div className="gm-pname">{p1Char.name} <span>P1</span></div>
               <div className="gm-pkeys">&#8592; &#8593; &#8595; &#8594;</div>
             </div>
           </div>
           <div className="gm-hud-center">
             <div className="gm-vs">VS</div>
-            {phase !== 'intro' && phase !== 'iqresult' && (
+            {phase !== 'intro' && phase !== 'iqresult' && phase !== 'charselect' && (
               <div className="gm-stage-badge">STAGE {stageIdx + 1} / {BASE_STAGES.length}</div>
             )}
             {phase === 'playing' && (
@@ -663,10 +689,10 @@ export default function BetaGame({ onClose }: { onClose: () => void }) {
           </div>
           <div className="gm-player gm-player-r">
             <div>
-              <div className="gm-pname">SPLATTY <span>P2</span></div>
+              <div className="gm-pname">{p2Char.name} <span>P2</span></div>
               <div className="gm-pkeys">W &nbsp;A &nbsp;S &nbsp;D</div>
             </div>
-            <div className="gm-dot" style={{ background: '#FF2D55' }} />
+            <div className="gm-dot" style={{ background: p2Char.svgColor }} />
           </div>
         </div>
 
@@ -675,6 +701,73 @@ export default function BetaGame({ onClose }: { onClose: () => void }) {
           <canvas ref={canvasRef} width={CW} height={CH} />
 
           <AnimatePresence>
+            {/* Character Select */}
+            {phase === 'charselect' && (
+              <motion.div key="charselect" className="gm-screen"
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                exit={{ opacity: 0, transition: { duration: 0.15 } }}
+              >
+                <div className="gm-screen-box cs-box">
+                  <p className="gs-eyebrow">Choose Your Character</p>
+
+                  <div className="cs-panels">
+                    {/* P1 panel */}
+                    <div className="cs-panel">
+                      <div className="cs-panel-header" style={{ borderColor: p1Char.svgColor }}>
+                        <span className="cs-panel-badge" style={{ background: p1Char.svgColor }}>P1</span>
+                        <span className="cs-panel-keys">&#8592; &#8593; &#8595; &#8594;</span>
+                      </div>
+                      <div className="cs-grid">
+                        {CHARACTERS.map(ch => (
+                          <button
+                            key={ch.id}
+                            className={`cs-card${p1Char.id === ch.id ? ' cs-card-active' : ''}`}
+                            style={{ '--cs-color': ch.svgColor } as React.CSSProperties}
+                            onClick={() => setP1Char(ch)}
+                          >
+                            <div className="cs-blob">
+                              <BlobSvg color={ch.svgColor} dark={ch.svgDark} size={52} />
+                            </div>
+                            <span className="cs-name">{ch.name}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="cs-divider">VS</div>
+
+                    {/* P2 panel */}
+                    <div className="cs-panel">
+                      <div className="cs-panel-header" style={{ borderColor: p2Char.svgColor }}>
+                        <span className="cs-panel-badge" style={{ background: p2Char.svgColor }}>P2</span>
+                        <span className="cs-panel-keys">W &nbsp;A &nbsp;S &nbsp;D</span>
+                      </div>
+                      <div className="cs-grid">
+                        {CHARACTERS.map(ch => (
+                          <button
+                            key={ch.id}
+                            className={`cs-card${p2Char.id === ch.id ? ' cs-card-active' : ''}`}
+                            style={{ '--cs-color': ch.svgColor } as React.CSSProperties}
+                            onClick={() => setP2Char(ch)}
+                          >
+                            <div className="cs-blob">
+                              <BlobSvg color={ch.svgColor} dark={ch.svgDark} size={52} />
+                            </div>
+                            <span className="cs-name">{ch.name}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <button className="gs-cta" onClick={confirmChars} style={{ marginTop: '8px' }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
+                    CONFIRM &amp; CONTINUE
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
             {/* Intro */}
             {phase === 'intro' && (
               <motion.div key="intro" className="gm-screen"
@@ -761,7 +854,15 @@ export default function BetaGame({ onClose }: { onClose: () => void }) {
               <IQResultScreen
                 iqResult={iqResult}
                 stageStats={stageStats}
-                onPlayAgain={startGame}
+                onPlayAgain={() => {
+                  gs.current = initStage(0, p1Char, p2Char);
+                  gs.current.phase = 'charselect';
+                  setStageIdx(0);
+                  setWinner(null);
+                  setElapsed(0);
+                  setIqResult(null);
+                  setPhase('charselect');
+                }}
                 onClose={onClose}
               />
             )}
