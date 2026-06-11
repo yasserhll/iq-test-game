@@ -527,7 +527,6 @@ export default function BetaGame({ onClose }: { onClose: () => void }) {
                 exit={{ opacity: 0, transition: { duration: 0.15 } }}
               >
                 <div className="gm-screen-box">
-                  <h2 className="gs-title">MAZE DASH</h2>
                   <p className="gs-lead">
                     Race through 3 mazes. Your <strong style={{ color: '#FFE500' }}>speed</strong> and{' '}
                     <strong style={{ color: '#FFE500' }}>path efficiency</strong> determine your IQ score.<br />
