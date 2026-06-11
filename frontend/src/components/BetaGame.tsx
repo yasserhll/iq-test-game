@@ -611,10 +611,12 @@ export default function BetaGame({ onClose }: { onClose: () => void }) {
       // Render
       ctx.fillStyle = '#0d0d0d';
       ctx.fillRect(0, 0, CW, CH);
-      renderMaze(ctx, state.maze, cfg.cols, cfg.rows, cell);
-      renderExit(ctx, cfg.cols, cell, t);
-      renderPixelBlob(ctx, state.p1, state.p1Color, state.p1Dark, cell);
-      renderPixelBlob(ctx, state.p2, state.p2Color, state.p2Dark, cell);
+      if (state.phase !== 'charselect' && state.phase !== 'intro') {
+        renderMaze(ctx, state.maze, cfg.cols, cfg.rows, cell);
+        renderExit(ctx, cfg.cols, cell, t);
+        renderPixelBlob(ctx, state.p1, state.p1Color, state.p1Dark, cell);
+        renderPixelBlob(ctx, state.p2, state.p2Color, state.p2Dark, cell);
+      }
 
       raf = requestAnimationFrame(loop);
     };
@@ -703,66 +705,68 @@ export default function BetaGame({ onClose }: { onClose: () => void }) {
           <AnimatePresence>
             {/* Character Select */}
             {phase === 'charselect' && (
-              <motion.div key="charselect" className="gm-screen"
+              <motion.div key="charselect" className="gm-screen cs-screen"
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                 exit={{ opacity: 0, transition: { duration: 0.15 } }}
               >
-                <div className="gm-screen-box cs-box">
-                  <p className="gs-eyebrow">Choose Your Character</p>
+                <div className="cs-wrap">
+                  <p className="gs-eyebrow" style={{ marginBottom: 4 }}>Choose Your Character</p>
 
-                  <div className="cs-panels">
-                    {/* P1 panel */}
-                    <div className="cs-panel">
-                      <div className="cs-panel-header" style={{ borderColor: p1Char.svgColor }}>
-                        <span className="cs-panel-badge" style={{ background: p1Char.svgColor }}>P1</span>
-                        <span className="cs-panel-keys">&#8592; &#8593; &#8595; &#8594;</span>
-                      </div>
-                      <div className="cs-grid">
-                        {CHARACTERS.map(ch => (
-                          <button
-                            key={ch.id}
-                            className={`cs-card${p1Char.id === ch.id ? ' cs-card-active' : ''}`}
-                            style={{ '--cs-color': ch.svgColor } as React.CSSProperties}
-                            onClick={() => setP1Char(ch)}
-                          >
-                            <div className="cs-blob">
-                              <BlobSvg color={ch.svgColor} dark={ch.svgDark} size={52} />
-                            </div>
-                            <span className="cs-name">{ch.name}</span>
-                          </button>
-                        ))}
-                      </div>
+                  {/* Player labels */}
+                  <div className="cs-players-row">
+                    <div className="cs-player-label" style={{ color: p1Char.svgColor }}>
+                      <span className="cs-pl-badge" style={{ background: p1Char.svgColor }}>P1</span>
+                      <span className="cs-pl-name">{p1Char.name}</span>
+                      <span className="cs-pl-keys">&#8592; &#8593; &#8594; &#8595;</span>
                     </div>
-
-                    <div className="cs-divider">VS</div>
-
-                    {/* P2 panel */}
-                    <div className="cs-panel">
-                      <div className="cs-panel-header" style={{ borderColor: p2Char.svgColor }}>
-                        <span className="cs-panel-badge" style={{ background: p2Char.svgColor }}>P2</span>
-                        <span className="cs-panel-keys">W &nbsp;A &nbsp;S &nbsp;D</span>
-                      </div>
-                      <div className="cs-grid">
-                        {CHARACTERS.map(ch => (
-                          <button
-                            key={ch.id}
-                            className={`cs-card${p2Char.id === ch.id ? ' cs-card-active' : ''}`}
-                            style={{ '--cs-color': ch.svgColor } as React.CSSProperties}
-                            onClick={() => setP2Char(ch)}
-                          >
-                            <div className="cs-blob">
-                              <BlobSvg color={ch.svgColor} dark={ch.svgDark} size={52} />
-                            </div>
-                            <span className="cs-name">{ch.name}</span>
-                          </button>
-                        ))}
-                      </div>
+                    <div className="cs-vs-mid">VS</div>
+                    <div className="cs-player-label cs-player-label-r" style={{ color: p2Char.svgColor }}>
+                      <span className="cs-pl-keys">W &nbsp;A &nbsp;S &nbsp;D</span>
+                      <span className="cs-pl-name">{p2Char.name}</span>
+                      <span className="cs-pl-badge" style={{ background: p2Char.svgColor }}>P2</span>
                     </div>
                   </div>
 
-                  <button className="gs-cta" onClick={confirmChars} style={{ marginTop: '8px' }}>
+                  {/* Shared character grid */}
+                  <div className="cs-grid">
+                    {CHARACTERS.map(ch => {
+                      const isP1 = p1Char.id === ch.id;
+                      const isP2 = p2Char.id === ch.id;
+                      return (
+                        <div key={ch.id} className="cs-card-wrap">
+                          <button
+                            className={`cs-card${isP1 || isP2 ? ' cs-card-sel' : ''}`}
+                            style={{ '--cs-color': ch.svgColor } as React.CSSProperties}
+                            onClick={() => {
+                              if (!isP1) setP1Char(ch);
+                              else if (!isP2) setP2Char(ch);
+                            }}
+                            onContextMenu={(e) => { e.preventDefault(); setP2Char(ch); }}
+                          >
+                            {isP1 && (
+                              <span className="cs-sel-badge cs-sel-p1" style={{ background: p1Char.svgColor }}>P1</span>
+                            )}
+                            {isP2 && (
+                              <span className={`cs-sel-badge cs-sel-p2${isP1 ? ' cs-sel-p2-offset' : ''}`} style={{ background: p2Char.svgColor }}>P2</span>
+                            )}
+                            <div className="cs-blob">
+                              <BlobSvg color={ch.svgColor} dark={ch.svgDark} size={68} />
+                            </div>
+                            <span className="cs-name">{ch.name}</span>
+                            <span className="cs-role">{ch.role}</span>
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <p className="cs-hint">
+                    <span style={{ color: p1Char.svgColor }}>P1</span> click to assign &nbsp;&middot;&nbsp; right-click to assign <span style={{ color: p2Char.svgColor }}>P2</span>
+                  </p>
+
+                  <button className="gs-cta" onClick={confirmChars}>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
-                    CONFIRM &amp; CONTINUE
+                    START GAME
                   </button>
                 </div>
               </motion.div>
