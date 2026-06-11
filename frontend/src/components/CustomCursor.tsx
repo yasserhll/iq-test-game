@@ -1,11 +1,15 @@
 import { useEffect, useRef } from 'react';
 
+const isTouch = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+
 export default function CustomCursor() {
   const cursorRef = useRef<HTMLDivElement>(null);
   const dotRef = useRef<HTMLDivElement>(null);
   const pos = useRef({ x: 0, y: 0, cx: 0, cy: 0 });
 
   useEffect(() => {
+    if (isTouch) return;
+
     const onMove = (e: MouseEvent) => {
       pos.current.x = e.clientX;
       pos.current.y = e.clientY;
@@ -29,7 +33,6 @@ export default function CustomCursor() {
 
     const onEnter = () => document.body.classList.add('hovering');
     const onLeave = () => document.body.classList.remove('hovering');
-
     const bindHover = () => {
       document.querySelectorAll('a, button').forEach(el => {
         el.addEventListener('mouseenter', onEnter);
@@ -37,7 +40,6 @@ export default function CustomCursor() {
       });
     };
     bindHover();
-
     document.addEventListener('mousemove', onMove);
 
     return () => {
@@ -45,6 +47,8 @@ export default function CustomCursor() {
       document.removeEventListener('mousemove', onMove);
     };
   }, []);
+
+  if (isTouch) return null;
 
   return (
     <>

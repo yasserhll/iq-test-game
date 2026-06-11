@@ -46,23 +46,32 @@ body.hovering .cursor { width: 42px; height: 42px; }
 .nav {
   position: fixed; top: 0; left: 0; right: 0; z-index: 200;
   background: var(--yellow); border-bottom: 3px solid var(--black);
-  padding: 12px 32px; display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 32px; display: flex; align-items: center; justify-content: space-between;
 }
-.nav-logo { display: flex; gap: 10px; align-items: center; }
-.logo-a {
-  font-family: 'Lilita One', cursive; font-size: 18px; color: var(--black);
-  border: 3px solid var(--black); padding: 5px 14px; background: var(--pink);
-  box-shadow: 3px 3px 0 var(--black); text-transform: uppercase; text-decoration: none;
-  transition: transform .1s, box-shadow .1s;
+
+/* Logo */
+.nav-logo {
+  display: flex; align-items: center; gap: 10px;
+  text-decoration: none; color: var(--black);
+  transition: opacity .15s;
 }
-.logo-b {
-  font-family: 'Lilita One', cursive; font-size: 18px; color: var(--white);
-  border: 3px solid var(--black); padding: 5px 14px; background: var(--blue);
-  box-shadow: 3px 3px 0 var(--black); text-transform: uppercase; text-decoration: none;
-  display: flex; align-items: center; gap: 6px;
-  transition: transform .1s, box-shadow .1s;
+.nav-logo:hover { opacity: .82; }
+.nav-logo-icon {
+  width: 44px; height: 44px; background: #3d9bff;
+  border: 3px solid var(--black); box-shadow: 3px 3px 0 var(--black);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
-.logo-a:hover, .logo-b:hover { transform: translate(-2px,-2px); box-shadow: 5px 5px 0 var(--black); }
+.nav-logo-text { display: flex; flex-direction: column; line-height: 1.1; }
+.nav-logo-title {
+  font-family: 'Lilita One', cursive; font-size: 18px;
+  color: var(--black); text-transform: uppercase; letter-spacing: .5px;
+}
+.nav-logo-sub {
+  font-family: 'Share Tech Mono', monospace; font-size: 8.5px;
+  color: rgba(0,0,0,.45); text-transform: uppercase; letter-spacing: 2px;
+}
+
+/* Nav links */
 .nav-links { display: flex; gap: 6px; list-style: none; }
 .nav-links a {
   font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;
@@ -75,14 +84,26 @@ body.hovering .cursor { width: 42px; height: 42px; }
   transform: translate(-2px,-2px); box-shadow: 4px 4px 0 var(--black);
   background: var(--black); color: var(--yellow);
 }
-.nav-cta {
-  font-family: 'Lilita One', cursive; font-size: 15px; color: var(--white);
-  border: 3px solid var(--black); padding: 9px 22px; background: var(--red);
-  box-shadow: 4px 4px 0 var(--black); text-transform: uppercase; text-decoration: none;
-  letter-spacing: 1px; transition: transform .12s, box-shadow .12s;
-  display: flex; align-items: center; gap: 8px;
+
+/* Try Beta in nav */
+.nav-beta {
+  font-family: 'Lilita One', cursive; font-size: 14px; color: var(--white);
+  border: 3px solid var(--black); padding: 8px 18px; background: var(--blue);
+  box-shadow: 3px 3px 0 var(--black); text-transform: uppercase; letter-spacing: 1px;
+  transition: transform .12s, box-shadow .12s;
+  display: flex; align-items: center; gap: 6px; white-space: nowrap;
 }
-.nav-cta:hover { transform: translate(-3px,-3px); box-shadow: 7px 7px 0 var(--black); }
+.nav-beta:hover { transform: translate(-2px,-2px); box-shadow: 5px 5px 0 var(--black); }
+
+/* Wishlist CTA in nav */
+.nav-cta {
+  font-family: 'Lilita One', cursive; font-size: 14px; color: var(--white);
+  border: 3px solid var(--black); padding: 8px 18px; background: var(--red);
+  box-shadow: 3px 3px 0 var(--black); text-transform: uppercase; text-decoration: none;
+  letter-spacing: 1px; transition: transform .12s, box-shadow .12s;
+  display: flex; align-items: center; gap: 7px; white-space: nowrap;
+}
+.nav-cta:hover { transform: translate(-2px,-2px); box-shadow: 5px 5px 0 var(--black); }
 
 /* Nav right wrapper + hamburger */
 .nav-right { display: flex; align-items: center; gap: 12px; }
@@ -116,13 +137,23 @@ body.hovering .cursor { width: 42px; height: 42px; }
   transition: color .15s;
 }
 .drawer-link:hover { color: var(--red); }
-.drawer-cta {
-  font-family: 'Lilita One', cursive; font-size: 18px; color: var(--white);
-  border: 3px solid var(--black); padding: 16px; background: var(--red);
-  box-shadow: 5px 5px 0 var(--black); text-transform: uppercase; letter-spacing: 1px;
-  transition: transform .12s, box-shadow .12s; margin-top: 16px;
+.drawer-actions { display: flex; gap: 12px; margin-top: 20px; }
+.drawer-beta {
+  flex: 1; font-family: 'Lilita One', cursive; font-size: 17px; color: var(--white);
+  border: 3px solid var(--black); padding: 15px 12px; background: var(--blue);
+  box-shadow: 4px 4px 0 var(--black); text-transform: uppercase; letter-spacing: 1px;
+  transition: transform .12s, box-shadow .12s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
 }
-.drawer-cta:hover { transform: translate(-3px,-3px); box-shadow: 8px 8px 0 var(--black); }
+.drawer-beta:hover { transform: translate(-3px,-3px); box-shadow: 7px 7px 0 var(--black); }
+.drawer-cta {
+  flex: 1; font-family: 'Lilita One', cursive; font-size: 17px; color: var(--white);
+  border: 3px solid var(--black); padding: 15px 12px; background: var(--red);
+  box-shadow: 4px 4px 0 var(--black); text-transform: uppercase; letter-spacing: 1px;
+  transition: transform .12s, box-shadow .12s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.drawer-cta:hover { transform: translate(-3px,-3px); box-shadow: 7px 7px 0 var(--black); }
 
 /* Mobile warning modal */
 .mobile-warn-modal {
@@ -702,7 +733,16 @@ footer { background: var(--black); border-top: 3px solid var(--yellow); padding:
   .footer-brand span { font-size: 28px; }
 }
 @media (max-width: 480px) {
-  .chars-grid { grid-template-columns: 1fr; }
-  .nav { padding: 10px 16px; }
-  .logo-a, .logo-b { font-size: 14px; padding: 4px 10px; }
+  .chars-grid { grid-template-columns: 1fr 1fr; }
+  .nav { padding: 10px 14px; }
+  .nav-logo-title { font-size: 15px; }
+  .nav-logo-sub { display: none; }
+  .nav-logo-icon { width: 36px; height: 36px; }
+  .nav-beta { display: none; }
+}
+
+/* Désactivation cursor sur appareils tactiles */
+@media (hover: none) {
+  body, a, button { cursor: auto !important; }
+  .cursor, .cursor-dot { display: none !important; }
 }
