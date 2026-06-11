@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+vendor/
+
+# Build output
+dist/
+build/
+public/build/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Laravel
+bootstrap/cache/
+storage/logs/
+storage/framework/cache/
+storage/framework/sessions/
+storage/framework/views/
+database/*.sqlite
+database/*.sqlite-shm
+database/*.sqlite-wal
+*.sqlite
+
+# Vite
+frontend/.vite/
+
+# Playwright test artifacts
+frontend/test-screenshots/
+frontend/test-*.mjs
+
+# System
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.suo
+*.user

@@ -1,0 +1,674 @@
+import { useEffect, useRef, useState, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+// ─── Stage configs ────────────────────────────────────────────────────────────
+interface StageConfig {
+  stage: number;
+  cols: number;
+  rows: number;
+  maxCell: number;
+  moveMs: number;
+  seed: number;
+}
+
+const BASE_STAGES: StageConfig[] = [
+  { stage: 1, cols: 21, rows: 21, maxCell: 30, moveMs: 150, seed: 0xdeadbeef },
+  { stage: 2, cols: 29, rows: 29, maxCell: 22, moveMs: 120, seed: 0xcafebabe },
+  { stage: 3, cols: 37, rows: 37, maxCell: 16, moveMs: 85,  seed: 0xf00dface },
+];
+
+// Compute cell so canvas fits inside viewport without clipping
+function computeCell(cols: number, rows: number, maxCell: number): number {
+  const chromeH = 182; // header + hud + footer + borders
+  const availH  = Math.floor(window.innerHeight * 0.93 - chromeH);
+  const availW  = Math.floor(Math.min(window.innerWidth - 50, 860));
+  return Math.max(10, Math.min(maxCell, Math.floor(availH / rows), Math.floor(availW / cols)));
+}
+
+// ─── Pixel art blob map — 16×15, derived from BlobSvg ────────────────────────
+// '.' transparent | 'K' #0a0a0a | 'B' body | 'D' dark | 'W' white
+const BLOB_MAP = [
+  '................',
+  '...KKKKKKKKKK..',
+  '.KBBBBBBBBBBBK..',
+  'KBBBBBBBBBBBBBBK',
+  'KBBBBBBBBBBBBBBK',
+  'KBBBKKWWKKWWKKBK',
+  'KBBBKKWKKKWKKKBK',
+  'KBBBBBBBBBBBBBBK',
+  'KBBBKWWWWWWKBBBK',
+  'KBBB.WWKKWW.BBBK',
+  '.BBBBBBBBBBBBBB.',
+  '.KBBBBBBBBBBBBK.',
+  '.KDDDDDKKDDDDDDK.',
+  '.KDDDDDKKDDDDDDK.',
+  '..KKKKK..KKKKK..',
+] as const;
+
+const BLOB_W = 16, BLOB_H = 15;
+
+// ─── Maze generation ─────────────────────────────────────────────────────────
+function buildMaze(cols: number, rows: number, seed: number): number[][] {
+  const grid: number[][] = Array.from({ length: rows }, () => Array(cols).fill(1));
+  let s = (seed >>> 0) || 1;
+  const rand = () => { s ^= s << 13; s ^= s >> 17; s ^= s << 5; return (s >>> 0) / 4294967296; };
+  const shuffle = <T,>(a: T[]): T[] => {
+    const b = [...a];
+    for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; }
+    return b;
+  };
+  const DIRS: [number, number][] = [[0, -2], [2, 0], [0, 2], [-2, 0]];
+  const carve = (cx: number, cy: number) => {
+    for (const [dx, dy] of shuffle(DIRS)) {
+      const nx = cx + dx, ny = cy + dy;
+      if (nx > 0 && nx < cols - 1 && ny > 0 && ny < rows - 1 && grid[ny][nx] === 1) {
+        grid[cy + dy / 2][cx + dx / 2] = 0; grid[ny][nx] = 0; carve(nx, ny);
+      }
+    }
+  };
+  grid[1][1] = 0; carve(1, 1);
+  grid[1][1] = 0; grid[rows - 2][cols - 2] = 0; grid[1][cols - 2] = 0;
+  return grid;
+}
+
+// BFS to get optimal path length
+function bfsPathLen(maze: number[][], sx: number, sy: number, ex: number, ey: number, cols: number, rows: number): number {
+  const vis: boolean[][] = Array.from({ length: rows }, () => Array(cols).fill(false));
+  const q: [number, number, number][] = [[sx, sy, 0]];
+  vis[sy][sx] = true;
+  while (q.length) {
+    const [x, y, d] = q.shift()!;
+    if (x === ex && y === ey) return d;
+    for (const [dx, dy] of [[0,-1],[0,1],[-1,0],[1,0]]) {
+      const nx = x + dx, ny = y + dy;
+      if (nx >= 0 && nx < cols && ny >= 0 && ny < rows && !vis[ny][nx] && maze[ny][nx] === 0) {
+        vis[ny][nx] = true; q.push([nx, ny, d + 1]);
+      }
+    }
+  }
+  return 1;
+}
+
+// ─── IQ calculation ──────────────────────────────────────────────────────────
+// Based on log-normal model:
+//   Average player takes ~10x the optimal time, ~2.5x the optimal moves
+interface StageStat { timeMs: number; moves: number; optimalMoves: number; moveMs: number; }
+
+function calcIQ(stats: StageStat[]): { speed: number; accuracy: number; iq: number; percentile: number; label: string } {
+  if (stats.length === 0) return { speed: 100, accuracy: 100, iq: 100, percentile: 50, label: 'Average' };
+
+  const zScores = stats.map(s => {
+    const optTime = s.optimalMoves * s.moveMs;
+    const speedRatio = Math.min(1, optTime / Math.max(optTime, s.timeMs));
+    const effRatio   = Math.min(1, s.optimalMoves / Math.max(s.optimalMoves, s.moves));
+    // μ_speed = ln(0.08), σ_speed = 0.9 → average player gets ~IQ 100
+    const zSpeed = (Math.log(Math.max(0.001, speedRatio)) - Math.log(0.08)) / 0.9;
+    // μ_eff = ln(0.38), σ_eff = 0.65
+    const zEff   = (Math.log(Math.max(0.001, effRatio))   - Math.log(0.38)) / 0.65;
+    return { zSpeed, zEff };
+  });
+
+  const avgZS = zScores.reduce((a, b) => a + b.zSpeed, 0) / zScores.length;
+  const avgZE = zScores.reduce((a, b) => a + b.zEff, 0)   / zScores.length;
+  const combined = avgZS * 0.60 + avgZE * 0.40;
+
+  const toIQ = (z: number) => Math.round(Math.max(45, Math.min(155, 100 + z * 15)));
+
+  const iq = toIQ(combined);
+  const speed = toIQ(avgZS);
+  const accuracy = toIQ(avgZE);
+
+  // Normal CDF approximation for percentile
+  const z = (iq - 100) / 15;
+  const t = 1 / (1 + 0.2316419 * Math.abs(z));
+  const d = 0.3989423 * Math.exp(-z * z / 2);
+  const poly = t * (0.3193815 + t * (-0.3565638 + t * (1.7814779 + t * (-1.8212560 + t * 1.3302744))));
+  const rawPerc = 1 - d * poly;
+  const percentile = Math.round((z > 0 ? rawPerc : 1 - rawPerc) * 100);
+
+  const label =
+    iq >= 130 ? 'Exceptionally Gifted' :
+    iq >= 120 ? 'Superior' :
+    iq >= 110 ? 'High Average' :
+    iq >= 90  ? 'Average' :
+    iq >= 80  ? 'Low Average' :
+    iq >= 70  ? 'Borderline' : 'Below Average';
+
+  return { speed, accuracy, iq, percentile, label };
+}
+
+// ─── Rendering ───────────────────────────────────────────────────────────────
+function renderMaze(ctx: CanvasRenderingContext2D, maze: number[][], cols: number, rows: number, cell: number) {
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < cols; x++) {
+      const px = x * cell, py = y * cell;
+      if (maze[y][x] === 1) {
+        ctx.fillStyle = '#0d0d0d';
+        ctx.fillRect(px, py, cell, cell);
+        ctx.fillStyle = 'rgba(255,229,0,0.06)';
+        ctx.fillRect(px, py, cell, 1);
+        ctx.fillRect(px, py, 1, cell);
+      } else {
+        ctx.fillStyle = '#181818';
+        ctx.fillRect(px, py, cell, cell);
+        if (cell >= 14) {
+          ctx.fillStyle = 'rgba(255,229,0,0.04)';
+          ctx.fillRect(px + cell / 2 - 1, py + cell / 2 - 1, 2, 2);
+        }
+      }
+    }
+  }
+}
+
+function renderExit(ctx: CanvasRenderingContext2D, cols: number, cell: number, t: number) {
+  const ex = cols - 2, ey = 1;
+  const px = ex * cell, py = ey * cell;
+  const cx = px + cell / 2, cy = py + cell / 2;
+  const pulse = 0.65 + 0.35 * Math.sin(t * 0.005);
+
+  // Solid pulsing background for the exit cell
+  ctx.fillStyle = `rgba(255,229,0,${0.22 * pulse})`;
+  ctx.fillRect(px, py, cell, cell);
+
+  // Bright border around exit cell
+  ctx.strokeStyle = `rgba(255,229,0,${0.9 * pulse})`;
+  ctx.lineWidth = Math.max(1.5, cell * 0.07);
+  ctx.strokeRect(px + 1, py + 1, cell - 2, cell - 2);
+
+  // Glow
+  ctx.save();
+  ctx.shadowColor = '#FFE500';
+  ctx.shadowBlur = cell * 0.8 * pulse;
+
+  // Star
+  const r = cell * 0.36 * pulse;
+  ctx.fillStyle = '#FFE500';
+  ctx.beginPath();
+  for (let i = 0; i < 10; i++) {
+    const angle = (i / 10) * Math.PI * 2 - Math.PI / 2;
+    const rad = i % 2 === 0 ? r : r * 0.42;
+    const vx = cx + Math.cos(angle) * rad;
+    const vy = cy + Math.sin(angle) * rad;
+    i === 0 ? ctx.moveTo(vx, vy) : ctx.lineTo(vx, vy);
+  }
+  ctx.closePath();
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.restore();
+
+  // "EXIT" label if cell is large enough
+  if (cell >= 18) {
+    ctx.fillStyle = `rgba(255,229,0,${0.85 * pulse})`;
+    ctx.font = `bold ${Math.floor(cell * 0.28)}px monospace`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('EXIT', cx, cy + r + cell * 0.22);
+  }
+}
+
+function renderPixelBlob(
+  ctx: CanvasRenderingContext2D,
+  pos: { x: number; y: number },
+  color: string,
+  dark: string,
+  cell: number,
+) {
+  const cx = pos.x * cell + cell / 2;
+  const cy = pos.y * cell + cell / 2;
+  const scale = Math.max(0.5, (cell - 2) / BLOB_W);
+  const startX = cx - (BLOB_W * scale) / 2;
+  const startY = cy - (BLOB_H * scale) / 2;
+
+  ctx.save();
+  ctx.shadowColor = color;
+  ctx.shadowBlur = cell * 0.4;
+  ctx.fillStyle = color + '44';
+  ctx.beginPath();
+  ctx.arc(cx, cy, cell * 0.4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.restore();
+
+  for (let y = 0; y < BLOB_H; y++) {
+    for (let x = 0; x < BLOB_W; x++) {
+      const ch = BLOB_MAP[y][x];
+      const fill = ch === 'K' ? '#0a0a0a' : ch === 'B' ? color : ch === 'D' ? dark : ch === 'W' ? '#ffffff' : null;
+      if (fill) {
+        ctx.fillStyle = fill;
+        ctx.fillRect(startX + x * scale, startY + y * scale, scale, scale);
+      }
+    }
+  }
+}
+
+// ─── Time formatter ───────────────────────────────────────────────────────────
+function fmtTime(ms: number): string {
+  const s = Math.floor(ms / 1000);
+  return s >= 60 ? `${Math.floor(s / 60)}m ${s % 60}s` : `${s}s`;
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
+type Phase = 'intro' | 'playing' | 'stageclear' | 'victory' | 'iqresult';
+interface Pos { x: number; y: number; }
+interface IQResult { speed: number; accuracy: number; iq: number; percentile: number; label: string; }
+
+interface GS {
+  phase: Phase;
+  stageIdx: number;
+  cell: number;
+  maze: number[][];
+  p1: Pos; p2: Pos;
+  keys: Set<string>;
+  lastMove: { p1: number; p2: number };
+  stageWinner: 1 | 2 | null;
+  stageStartTime: number;
+  p1Moves: number;
+  p2Moves: number;
+  optimalMoves: number;
+  stageStats: StageStat[];
+  elapsedMs: number;
+}
+
+function initStage(stageIdx: number): GS {
+  const cfg = BASE_STAGES[stageIdx];
+  const cell = computeCell(cfg.cols, cfg.rows, cfg.maxCell);
+  const maze = buildMaze(cfg.cols, cfg.rows, cfg.seed);
+  const opt  = bfsPathLen(maze, 1, 1, cfg.cols - 2, 1, cfg.cols, cfg.rows);
+  return {
+    phase: 'playing',
+    stageIdx,
+    cell,
+    maze,
+    p1: { x: 1, y: 1 },
+    p2: { x: cfg.cols - 2, y: cfg.rows - 2 },
+    keys: new Set(),
+    lastMove: { p1: 0, p2: 0 },
+    stageWinner: null,
+    stageStartTime: performance.now(),
+    p1Moves: 0,
+    p2Moves: 0,
+    optimalMoves: opt,
+    stageStats: [],
+    elapsedMs: 0,
+  };
+}
+
+const INIT = initStage(0);
+// Pre-compute to avoid recomputation (we override on startStage)
+INIT.phase = 'intro';
+
+export default function BetaGame({ onClose }: { onClose: () => void }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const gs = useRef<GS>(INIT);
+
+  const [phase, setPhase]       = useState<Phase>('intro');
+  const [stageIdx, setStageIdx] = useState(0);
+  const [winner, setWinner]     = useState<1 | 2 | null>(null);
+  const [elapsed, setElapsed]   = useState(0);      // ms, updated each second
+  const [iqResult, setIqResult] = useState<IQResult | null>(null);
+
+  const startStage = useCallback((idx: number, prevStats: StageStat[] = []) => {
+    const state = initStage(idx);
+    state.stageStats = prevStats;
+    gs.current = state;
+    setStageIdx(idx);
+    setWinner(null);
+    setElapsed(0);
+    setPhase('playing');
+  }, []);
+
+  const startGame = useCallback(() => startStage(0), [startStage]);
+
+  const advanceStage = useCallback(() => {
+    const next = gs.current.stageIdx + 1;
+    const stats = gs.current.stageStats;
+    if (next < BASE_STAGES.length) {
+      startStage(next, stats);
+    } else {
+      const result = calcIQ(stats);
+      setIqResult(result);
+      gs.current.phase = 'iqresult';
+      setPhase('iqresult');
+    }
+  }, [startStage]);
+
+  // ── Game loop ──────────────────────────────────────────────────────────────
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d')!;
+    let raf: number;
+    let lastSecond = 0;
+
+    const GAME_KEYS = new Set([
+      'ArrowUp','ArrowDown','ArrowLeft','ArrowRight',
+      'w','a','s','d','W','A','S','D',
+    ]);
+    const onKeyDown = (e: KeyboardEvent) => { if (GAME_KEYS.has(e.key)) e.preventDefault(); gs.current.keys.add(e.key); };
+    const onKeyUp   = (e: KeyboardEvent) => gs.current.keys.delete(e.key);
+    const onEsc     = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', onKeyDown);
+    window.addEventListener('keyup',   onKeyUp);
+    window.addEventListener('keydown', onEsc);
+
+    const loop = (t: number) => {
+      const state = gs.current;
+      const cfg   = BASE_STAGES[state.stageIdx];
+      const cell  = state.cell;
+      const CW    = cfg.cols * cell;
+      const CH    = cfg.rows * cell;
+      const exitX = cfg.cols - 2;
+
+      if (canvas.width !== CW)  canvas.width  = CW;
+      if (canvas.height !== CH) canvas.height = CH;
+
+      if (state.phase === 'playing') {
+        const { p1, p2, keys, lastMove, maze } = state;
+        const now = performance.now();
+        state.elapsedMs = now - state.stageStartTime;
+
+        // Update elapsed display every second
+        if (now - lastSecond > 1000) {
+          setElapsed(Math.floor(state.elapsedMs));
+          lastSecond = now;
+        }
+
+        // P1 — arrow keys
+        if (t - lastMove.p1 > cfg.moveMs) {
+          let dx = 0, dy = 0;
+          if (keys.has('ArrowLeft'))       dx = -1;
+          else if (keys.has('ArrowRight')) dx =  1;
+          else if (keys.has('ArrowUp'))    dy = -1;
+          else if (keys.has('ArrowDown'))  dy =  1;
+          if (dx || dy) {
+            const nx = p1.x + dx, ny = p1.y + dy;
+            if (nx >= 0 && nx < cfg.cols && ny >= 0 && ny < cfg.rows && maze[ny][nx] === 0) {
+              p1.x = nx; p1.y = ny; state.p1Moves++;
+            }
+            lastMove.p1 = t;
+          }
+        }
+
+        // P2 — WASD
+        if (t - lastMove.p2 > cfg.moveMs) {
+          let dx = 0, dy = 0;
+          if (keys.has('a') || keys.has('A'))      dx = -1;
+          else if (keys.has('d') || keys.has('D')) dx =  1;
+          else if (keys.has('w') || keys.has('W')) dy = -1;
+          else if (keys.has('s') || keys.has('S')) dy =  1;
+          if (dx || dy) {
+            const nx = p2.x + dx, ny = p2.y + dy;
+            if (nx >= 0 && nx < cfg.cols && ny >= 0 && ny < cfg.rows && maze[ny][nx] === 0) {
+              p2.x = nx; p2.y = ny; state.p2Moves++;
+            }
+            lastMove.p2 = t;
+          }
+        }
+
+        // Win detection
+        const p1Won = p1.x === exitX && p1.y === 1;
+        const p2Won = p2.x === exitX && p2.y === 1;
+        if (p1Won || p2Won) {
+          const w = p1Won ? 1 : 2;
+          const moves = p1Won ? state.p1Moves : state.p2Moves;
+          const stat: StageStat = {
+            timeMs: state.elapsedMs,
+            moves: Math.max(state.optimalMoves, moves),
+            optimalMoves: state.optimalMoves,
+            moveMs: cfg.moveMs,
+          };
+          const newStats = [...state.stageStats, stat];
+          state.stageStats = newStats;
+          state.stageWinner = w;
+
+          const isLast = state.stageIdx === BASE_STAGES.length - 1;
+          const next: Phase = isLast ? 'victory' : 'stageclear';
+          state.phase = next;
+          setWinner(w);
+          setPhase(next);
+        }
+      }
+
+      // Render
+      ctx.fillStyle = '#0d0d0d';
+      ctx.fillRect(0, 0, CW, CH);
+      renderMaze(ctx, state.maze, cfg.cols, cfg.rows, cell);
+      renderExit(ctx, cfg.cols, cell, t);
+      renderPixelBlob(ctx, state.p1, '#2ECC40', '#1aab2e', cell);
+      renderPixelBlob(ctx, state.p2, '#FF2D55', '#b01f3b', cell);
+
+      raf = requestAnimationFrame(loop);
+    };
+
+    raf = requestAnimationFrame(loop);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('keyup',   onKeyUp);
+      window.removeEventListener('keydown', onEsc);
+    };
+  }, [onClose]);
+
+  // ── IQ result trigger ──────────────────────────────────────────────────────
+  useEffect(() => {
+    if (phase === 'victory') {
+      const t = setTimeout(() => {
+        const result = calcIQ(gs.current.stageStats);
+        setIqResult(result);
+        gs.current.phase = 'iqresult';
+        setPhase('iqresult');
+      }, 2200);
+      return () => clearTimeout(t);
+    }
+  }, [phase]);
+
+  // ── JSX ────────────────────────────────────────────────────────────────────
+  const cfg  = BASE_STAGES[stageIdx];
+  const cell = gs.current.cell || computeCell(cfg.cols, cfg.rows, cfg.maxCell);
+  const CW   = cfg.cols * cell;
+  const CH   = cfg.rows * cell;
+
+  return (
+    <motion.div
+      className="game-overlay"
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <motion.div
+        className="game-modal"
+        initial={{ scale: 0.88, y: 24 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.88, y: 24 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+      >
+        {/* Header */}
+        <div className="gm-header">
+          <div className="gm-logo">
+            <span className="gm-logo-name">BLOB BASH</span>
+            <span className="gm-logo-badge">BETA</span>
+          </div>
+          <button className="gm-close" onClick={onClose} aria-label="Fermer">&#x2715;</button>
+        </div>
+
+        {/* HUD */}
+        <div className="gm-hud">
+          <div className="gm-player">
+            <div className="gm-dot" style={{ background: '#2ECC40' }} />
+            <div>
+              <div className="gm-pname">GLOOB <span>P1</span></div>
+              <div className="gm-pkeys">&#8592; &#8593; &#8595; &#8594;</div>
+            </div>
+          </div>
+          <div className="gm-hud-center">
+            <div className="gm-vs">VS</div>
+            {phase !== 'intro' && phase !== 'iqresult' && (
+              <div className="gm-stage-badge">STAGE {stageIdx + 1} / {BASE_STAGES.length}</div>
+            )}
+            {phase === 'playing' && (
+              <div className="gm-timer">{fmtTime(elapsed)}</div>
+            )}
+          </div>
+          <div className="gm-player gm-player-r">
+            <div>
+              <div className="gm-pname">SPLATTY <span>P2</span></div>
+              <div className="gm-pkeys">W &nbsp;A &nbsp;S &nbsp;D</div>
+            </div>
+            <div className="gm-dot" style={{ background: '#FF2D55' }} />
+          </div>
+        </div>
+
+        {/* Canvas + overlays */}
+        <div className="gm-canvas-wrap">
+          <canvas ref={canvasRef} width={CW} height={CH} />
+
+          <AnimatePresence>
+            {/* Intro */}
+            {phase === 'intro' && (
+              <motion.div key="intro" className="gm-screen"
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                exit={{ opacity: 0, transition: { duration: 0.15 } }}
+              >
+                <div className="gm-screen-box">
+                  <p className="gs-eyebrow">IQ Maze Challenge &mdash; Beta v0.1</p>
+                  <h2 className="gs-title">MAZE DASH</h2>
+                  <p className="gs-lead">
+                    Race through 3 mazes. Your <strong style={{ color: '#FFE500' }}>speed</strong> and{' '}
+                    <strong style={{ color: '#FFE500' }}>path efficiency</strong> determine your IQ score.<br />
+                    Reach the <span className="gs-yellow">&#9733; EXIT</span> in the <strong>top-right corner</strong> first.
+                  </p>
+                  <div className="gs-stages-row">
+                    {BASE_STAGES.map(s => (
+                      <div key={s.stage} className="gs-stage-pip">
+                        <span className="gs-stage-num">{s.stage}</span>
+                        <span className="gs-stage-size">{s.cols}×{s.rows}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="gs-ctrl-grid">
+                    <div className="gs-ctrl-row">
+                      <span className="gs-badge gs-green">P1 GLOOB</span>
+                      <div className="gs-keys"><kbd>&#8592;</kbd><kbd>&#8593;</kbd><kbd>&#8595;</kbd><kbd>&#8594;</kbd></div>
+                    </div>
+                    <div className="gs-ctrl-row">
+                      <span className="gs-badge gs-red">P2 SPLATTY</span>
+                      <div className="gs-keys"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></div>
+                    </div>
+                  </div>
+                  <button className="gs-cta" onClick={startGame}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
+                    START GAME
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Stage clear */}
+            {phase === 'stageclear' && winner && (
+              <motion.div key="stageclear" className="gm-screen"
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                exit={{ opacity: 0, transition: { duration: 0.2 } }}
+              >
+                <div className="gm-screen-box">
+                  <p className="gs-eyebrow">Stage {stageIdx + 1} Complete</p>
+                  <div className="gs-winner-tag" style={{ background: winner === 1 ? '#2ECC40' : '#FF2D55' }}>
+                    {winner === 1 ? 'GLOOB' : 'SPLATTY'} WINS
+                  </div>
+                  <div className="gs-stage-track">
+                    {BASE_STAGES.map((s, i) => (
+                      <div key={s.stage} className={`gs-track-pip${i <= stageIdx ? ' gs-track-done' : ''}`} />
+                    ))}
+                  </div>
+                  <p className="gs-lead">
+                    Stage {stageIdx + 2} — {BASE_STAGES[stageIdx + 1]?.cols}×{BASE_STAGES[stageIdx + 1]?.rows} maze awaits.
+                  </p>
+                  <div className="gs-btn-row">
+                    <button className="gs-cta" onClick={advanceStage}>STAGE {stageIdx + 2} &#8594;</button>
+                    <button className="gs-cta gs-cta-outline" onClick={onClose}>EXIT</button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Victory (brief, then IQ screen) */}
+            {phase === 'victory' && winner && (
+              <motion.div key="victory" className="gm-screen"
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              >
+                <div className="gm-screen-box">
+                  <p className="gs-eyebrow">All 3 Stages Cleared</p>
+                  <div className="gs-winner-tag" style={{ background: winner === 1 ? '#2ECC40' : '#FF2D55' }}>
+                    {winner === 1 ? 'GLOOB' : 'SPLATTY'}
+                  </div>
+                  <h2 className="gs-win-title">WINS!</h2>
+                  <p className="gs-lead" style={{ color: 'rgba(255,229,0,.7)' }}>Calculating IQ score...</p>
+                </div>
+              </motion.div>
+            )}
+
+            {/* IQ Result */}
+            {phase === 'iqresult' && iqResult && (
+              <motion.div key="iqresult" className="gm-screen"
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              >
+                <div className="gm-screen-box gm-iq-box">
+                  <p className="gs-eyebrow">Spatial IQ Estimate</p>
+                  <div className="gm-iq-number">{iqResult.iq}</div>
+                  <div className="gm-iq-label" style={{
+                    color: iqResult.iq >= 120 ? '#2ECC40' : iqResult.iq >= 100 ? '#FFE500' : '#FF2D55'
+                  }}>
+                    {iqResult.label}
+                  </div>
+                  <div className="gm-iq-percentile">Top {100 - iqResult.percentile}% &nbsp;&middot;&nbsp; {iqResult.percentile}th percentile</div>
+
+                  <div className="gm-iq-bars">
+                    <div className="gm-iq-bar-row">
+                      <span>Processing Speed</span>
+                      <div className="gm-iq-track">
+                        <motion.div
+                          className="gm-iq-fill"
+                          style={{ background: '#2ECC40' }}
+                          initial={{ width: 0 }}
+                          animate={{ width: `${Math.min(100, ((iqResult.speed - 40) / 115) * 100)}%` }}
+                          transition={{ duration: 1.2, ease: 'easeOut' }}
+                        />
+                      </div>
+                      <span className="gm-iq-val">{iqResult.speed}</span>
+                    </div>
+                    <div className="gm-iq-bar-row">
+                      <span>Spatial Accuracy</span>
+                      <div className="gm-iq-track">
+                        <motion.div
+                          className="gm-iq-fill"
+                          style={{ background: '#1E6EFF' }}
+                          initial={{ width: 0 }}
+                          animate={{ width: `${Math.min(100, ((iqResult.accuracy - 40) / 115) * 100)}%` }}
+                          transition={{ duration: 1.2, ease: 'easeOut', delay: 0.2 }}
+                        />
+                      </div>
+                      <span className="gm-iq-val">{iqResult.accuracy}</span>
+                    </div>
+                  </div>
+
+                  <p className="gm-iq-disclaimer">
+                    Entertainment estimate only &mdash; not a clinical assessment
+                  </p>
+
+                  <div className="gs-btn-row">
+                    <button className="gs-cta" onClick={startGame}>&#8635; PLAY AGAIN</button>
+                    <button className="gs-cta gs-cta-outline" onClick={onClose}>EXIT</button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Footer */}
+        <div className="gm-footer">
+          <span>
+            <span className="gs-yellow">&#9733; EXIT</span> is at the <strong>top-right corner</strong>
+            &nbsp;&middot;&nbsp; Escape to close
+          </span>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
