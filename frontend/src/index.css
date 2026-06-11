@@ -957,6 +957,41 @@ footer { background: var(--black); border-top: 3px solid var(--yellow); padding:
 }
 .mp-cta-btn:hover { transform: translate(-3px,-3px); box-shadow: 8px 8px 0 var(--black); }
 
+/* ── PWA Install Banner ── */
+.pwa-banner {
+  position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
+  z-index: 900; width: calc(100% - 32px); max-width: 480px;
+  background: var(--black); border: 3px solid var(--yellow);
+  box-shadow: 6px 6px 0 rgba(255,229,0,.2);
+  display: flex; align-items: center; gap: 12px; padding: 14px 16px;
+}
+.pwa-banner-icon { flex-shrink: 0; border: 2px solid rgba(255,229,0,.2); }
+.pwa-banner-icon img { display: block; }
+.pwa-banner-text { flex: 1; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.pwa-banner-title {
+  font-family: 'Lilita One', cursive; font-size: 15px;
+  color: var(--yellow); text-transform: uppercase; letter-spacing: .5px;
+}
+.pwa-banner-sub {
+  font-family: 'Share Tech Mono', monospace; font-size: 10px;
+  color: rgba(255,255,255,.4); text-transform: uppercase; letter-spacing: 1px;
+}
+.pwa-banner-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.pwa-install-btn {
+  font-family: 'Lilita One', cursive; font-size: 13px; color: var(--black);
+  background: var(--yellow); border: 2px solid var(--black);
+  padding: 7px 16px; text-transform: uppercase; letter-spacing: 1px;
+  box-shadow: 3px 3px 0 rgba(255,229,0,.2);
+  transition: transform .1s, box-shadow .1s;
+}
+.pwa-install-btn:hover { transform: translate(-2px,-2px); box-shadow: 5px 5px 0 rgba(255,229,0,.2); }
+.pwa-dismiss-btn {
+  background: none; border: 2px solid rgba(255,255,255,.15); color: rgba(255,255,255,.4);
+  width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;
+  font-size: 14px; transition: border-color .15s, color .15s;
+}
+.pwa-dismiss-btn:hover { border-color: var(--yellow); color: var(--yellow); }
+
 /* ── Scroll reveal ── */
 .reveal { opacity: 0; transform: translateY(28px); transition: opacity .55s ease, transform .55s ease; }
 .reveal.in { opacity: 1; transform: none; }
