@@ -57,9 +57,10 @@ body.hovering .cursor { width: 42px; height: 42px; }
 }
 .nav-logo:hover { opacity: .82; }
 .nav-logo-icon {
-  width: 44px; height: 44px; background: #0a0a0a;
+  width: 44px; height: 44px; background: var(--yellow);
   border: 3px solid var(--black); box-shadow: 3px 3px 0 var(--black);
   display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  padding: 4px;
 }
 .nav-logo-text { display: flex; flex-direction: column; line-height: 1.1; }
 .nav-logo-title {
