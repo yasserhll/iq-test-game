@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { useScrollReveal } from '../hooks/useScrollReveal';
 import { BlobSvg } from './Hero';
 import WishlistModal from './WishlistModal';
