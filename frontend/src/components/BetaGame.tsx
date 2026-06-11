@@ -12,13 +12,12 @@ interface StageConfig {
   rows: number;
   maxCell: number;
   moveMs: number;
-  seed: number;
 }
 
 const BASE_STAGES: StageConfig[] = [
-  { stage: 1, cols: 21, rows: 21, maxCell: 30, moveMs: 150, seed: 0xdeadbeef },
-  { stage: 2, cols: 29, rows: 29, maxCell: 22, moveMs: 120, seed: 0xcafebabe },
-  { stage: 3, cols: 37, rows: 37, maxCell: 16, moveMs: 85,  seed: 0xf00dface },
+  { stage: 1, cols: 21, rows: 21, maxCell: 30, moveMs: 150 },
+  { stage: 2, cols: 29, rows: 29, maxCell: 22, moveMs: 120 },
+  { stage: 3, cols: 37, rows: 37, maxCell: 16, moveMs: 85  },
 ];
 
 // Compute cell so canvas fits inside viewport without clipping
@@ -432,9 +431,10 @@ function initStage(
   p1: Character = DEFAULT_P1,
   p2: Character = DEFAULT_P2,
 ): GS {
-  const cfg = BASE_STAGES[stageIdx];
+  const cfg  = BASE_STAGES[stageIdx];
   const cell = computeCell(cfg.cols, cfg.rows, cfg.maxCell);
-  const maze = buildMaze(cfg.cols, cfg.rows, cfg.seed);
+  const seed = (Math.random() * 0xFFFFFFFF) >>> 0;
+  const maze = buildMaze(cfg.cols, cfg.rows, seed);
   const opt  = bfsPathLen(maze, 1, 1, cfg.cols - 2, 1, cfg.cols, cfg.rows);
   return {
     phase: 'playing',
@@ -763,11 +763,11 @@ export default function BetaGame({ onClose }: { onClose: () => void }) {
                   </div>
                   <div className="gs-ctrl-grid">
                     <div className="gs-ctrl-row">
-                      <span className="gs-badge gs-green">P1 GLOOB</span>
+                      <span className="gs-badge" style={{ background: p1Char.svgColor }}>P1 {p1Char.name}</span>
                       <div className="gs-keys"><kbd>&#8592;</kbd><kbd>&#8593;</kbd><kbd>&#8595;</kbd><kbd>&#8594;</kbd></div>
                     </div>
                     <div className="gs-ctrl-row">
-                      <span className="gs-badge gs-red">P2 SPLATTY</span>
+                      <span className="gs-badge" style={{ background: p2Char.svgColor }}>P2 {p2Char.name}</span>
                       <div className="gs-keys"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></div>
                     </div>
                   </div>
@@ -787,8 +787,8 @@ export default function BetaGame({ onClose }: { onClose: () => void }) {
               >
                 <div className="gm-screen-box">
                   <p className="gs-eyebrow">Stage {stageIdx + 1} Complete</p>
-                  <div className="gs-winner-tag" style={{ background: winner === 1 ? '#2ECC40' : '#FF2D55' }}>
-                    {winner === 1 ? 'GLOOB' : 'SPLATTY'} WINS
+                  <div className="gs-winner-tag" style={{ background: winner === 1 ? p1Char.svgColor : p2Char.svgColor }}>
+                    {winner === 1 ? p1Char.name : p2Char.name} WINS
                   </div>
                   <div className="gs-stage-track">
                     {BASE_STAGES.map((s, i) => (
@@ -813,8 +813,8 @@ export default function BetaGame({ onClose }: { onClose: () => void }) {
               >
                 <div className="gm-screen-box">
                   <p className="gs-eyebrow">All 3 Stages Cleared</p>
-                  <div className="gs-winner-tag" style={{ background: winner === 1 ? '#2ECC40' : '#FF2D55' }}>
-                    {winner === 1 ? 'GLOOB' : 'SPLATTY'}
+                  <div className="gs-winner-tag" style={{ background: winner === 1 ? p1Char.svgColor : p2Char.svgColor }}>
+                    {winner === 1 ? p1Char.name : p2Char.name}
                   </div>
                   <h2 className="gs-win-title">WINS!</h2>
                   <p className="gs-lead" style={{ color: 'rgba(255,229,0,.7)' }}>Calculating IQ score...</p>
