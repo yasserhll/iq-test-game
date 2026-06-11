@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BLOB BASH — The Gooiest Brawler</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Space+Grotesk:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root {
+  --yellow: #FFE500;
+  --black: #0A0A0A;
+  --red: #FF2D55;
+  --blue: #1E6EFF;
+  --green: #3DDC69;
+  --white: #FFFFFF;
+  --pink: #FF69B4;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--yellow);
+  font-family: 'Space Grotesk', sans-serif;
+  color: var(--black);
+  overflow-x: hidden;
+  cursor: none;
+}
+
+/* ─── CUSTOM CURSOR ─── */
+#cursor {
+  width: 18px; height: 18px;
+  border: 3px solid var(--black);
+  background: transparent;
+  position: fixed; pointer-events: none; z-index: 9999;
+  transform: translate(-50%, -50%);
+  transition: transform .15s, background .15s, width .15s, height .15s;
+}
+#cursor-dot {
+  width: 5px; height: 5px;
+  background: var(--black);
+  position: fixed; pointer-events: none; z-index: 10000;
+  transform: translate(-50%, -50%);
+  border-radius: 0;
+}
+body.hovering #cursor {
+  width: 36px; height: 36px;
+  background: rgba(255,229,0,.3);
+}
+
+/* ─── NAVBAR ─── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  background: var(--yellow);
+  border-bottom: 3px solid var(--black);
+  padding: 12px 32px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.nav-logo { display: flex; gap: 10px; align-items: center; }
+.logo-a {
+  font-family: 'Lilita One', cursive; font-size: 18px;
+  color: var(--black); border: 3px solid var(--black);
+  padding: 5px 14px; background: var(--pink);
+  box-shadow: 3px 3px 0 var(--black); text-transform: uppercase;
+  letter-spacing: 1px; text-decoration: none;
+}
+.logo-b {
+  font-family: 'Lilita One', cursive; font-size: 18px;
+  color: var(--white); border: 3px solid var(--black);
+  padding: 5px 14px; background: var(--blue);
+  box-shadow: 3px 3px 0 var(--black); text-transform: uppercase;
+  text-decoration: none; display: flex; align-items: center; gap: 6px;
+}
+.nav-links { display: flex; gap: 6px; list-style: none; }
+.nav-links a {
+  font-weight: 700; font-size: 12px; text-transform: uppercase;
+  letter-spacing: 1px; color: var(--black); text-decoration: none;
+  border: 2.5px solid var(--black); padding: 7px 16px;
+  background: var(--yellow); box-shadow: 2px 2px 0 var(--black);
+  transition: transform .1s, box-shadow .1s; display: block;
+}
+.nav-links a:hover { transform: translate(-2px,-2px); box-shadow: 4px 4px 0 var(--black); }
+.nav-cta {
+  font-family: 'Lilita One', cursive; font-size: 15px;
+  color: var(--white); border: 3px solid var(--black);
+  padding: 9px 22px; background: var(--red);
+  box-shadow: 4px 4px 0 var(--black); text-transform: uppercase;
+  text-decoration: none; letter-spacing: 1px;
+  transition: transform .12s, box-shadow .12s;
+  display: flex; align-items: center; gap: 8px;
+}
+.nav-cta:hover { transform: translate(-3px,-3px); box-shadow: 7px 7px 0 var(--black); }
+
+/* ─── HERO ─── */
+.hero {
+  min-height: 100vh; padding: 120px 80px 80px;
+  display: flex; align-items: center;
+  position: relative; overflow: hidden;
+}
+.hero-dots {
+  position: absolute; inset: 0; pointer-events: none;
+  background-image: radial-gradient(circle, rgba(0,0,0,.07) 1.5px, transparent 1.5px);
+  background-size: 28px 28px;
+}
+.hero-content { max-width: 660px; position: relative; z-index: 2; }
+
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 10px;
+  border: 3px solid var(--black); padding: 8px 18px;
+  font-family: 'Share Tech Mono', monospace; font-size: 12px;
+  font-weight: 700; text-transform: uppercase; letter-spacing: 2px;
+  background: var(--white); box-shadow: 4px 4px 0 var(--black);
+  margin-bottom: 28px;
+  animation: badge-pop .7s cubic-bezier(.34,1.56,.64,1) both;
+}
+@keyframes badge-pop {
+  from { transform: translateY(-20px) rotate(-4deg); opacity: 0; }
+  to   { transform: rotate(-1.5deg); opacity: 1; }
+}
+
+.hero-title { font-family: 'Lilita One', cursive; line-height: .88; margin-bottom: 28px; }
+.title-l1 {
+  display: block; font-size: clamp(88px, 13vw, 148px);
+  color: var(--black); text-shadow: 6px 6px 0 var(--red);
+  animation: slide-left .65s cubic-bezier(.34,1.56,.64,1) .2s both;
+}
+.title-l2 {
+  display: block; font-size: clamp(88px, 13vw, 148px);
+  color: var(--blue); text-shadow: 6px 6px 0 var(--black);
+  animation: slide-left .65s cubic-bezier(.34,1.56,.64,1) .35s both;
+}
+@keyframes slide-left {
+  from { transform: translateX(-70px) skewX(-6deg); opacity: 0; }
+  to   { transform: none; opacity: 1; }
+}
+
+.hero-desc {
+  font-size: 17px; line-height: 1.65; font-weight: 500;
+  max-width: 520px; border-left: 5px solid var(--black);
+  padding-left: 20px; margin-bottom: 40px;
+  animation: fade-up .65s ease .52s both;
+}
+.hero-btns {
+  display: flex; gap: 16px; margin-bottom: 32px;
+  animation: fade-up .65s ease .65s both;
+}
+.btn-p {
+  font-family: 'Lilita One', cursive; font-size: 17px;
+  color: var(--black); border: 3px solid var(--black);
+  padding: 15px 34px; background: var(--green);
+  box-shadow: 5px 5px 0 var(--black); text-decoration: none;
+  text-transform: uppercase; letter-spacing: 1px;
+  transition: transform .13s, box-shadow .13s;
+  display: flex; align-items: center; gap: 10px;
+}
+.btn-p:hover { transform: translate(-4px,-4px); box-shadow: 9px 9px 0 var(--black); }
+.btn-s {
+  font-family: 'Lilita One', cursive; font-size: 17px;
+  color: var(--black); border: 3px solid var(--black);
+  padding: 15px 34px; background: var(--white);
+  box-shadow: 5px 5px 0 var(--black); text-decoration: none;
+  text-transform: uppercase; letter-spacing: 1px;
+  transition: transform .13s, box-shadow .13s;
+}
+.btn-s:hover { transform: translate(-4px,-4px); box-shadow: 9px 9px 0 var(--black); }
+
+.hero-meta {
+  font-family: 'Share Tech Mono', monospace; font-size: 12px;
+  text-transform: uppercase; letter-spacing: 2px; opacity: .6;
+  animation: fade-up .65s ease .8s both;
+}
+@keyframes fade-up {
+  from { transform: translateY(22px); opacity: 0; }
+  to   { transform: none; opacity: 1; }
+}
+
+/* ─── CHARACTER CARD ─── */
+.hero-card {
+  position: absolute; right: 80px; top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  animation: card-enter .8s cubic-bezier(.34,1.56,.64,1) .4s both, float 3.2s ease-in-out 1.2s infinite;
+}
+@keyframes card-enter {
+  from { transform: translateY(calc(-50% + 60px)) rotate(8deg); opacity: 0; }
+  to   { transform: translateY(-50%) rotate(4deg); opacity: 1; }
+}
+@keyframes float {
+  0%,100% { transform: translateY(-50%) translateY(0) rotate(4deg); }
+  50%      { transform: translateY(-50%) translateY(-18px) rotate(4deg); }
+}
+.polaroid {
+  background: var(--white); border: 3px solid var(--black);
+  padding: 14px 14px 44px; box-shadow: 8px 8px 0 var(--black);
+  position: relative; width: 280px;
+}
+.sticker {
+  position: absolute; top: -18px; left: -18px;
+  background: var(--red); color: var(--white);
+  font-family: 'Lilita One', cursive; font-size: 14px;
+  padding: 8px 16px; border: 3px solid var(--black);
+  box-shadow: 3px 3px 0 var(--black);
+  transform: rotate(-8deg);
+  animation: sticker-wiggle 2.2s ease-in-out infinite;
+  text-transform: uppercase;
+}
+@keyframes sticker-wiggle {
+  0%,100% { transform: rotate(-8deg) scale(1); }
+  40%     { transform: rotate(-4deg) scale(1.06); }
+  70%     { transform: rotate(-12deg) scale(.96); }
+}
+.polaroid-art {
+  width: 100%; aspect-ratio: 1;
+  background: #3d9bff; border: 2px solid var(--black);
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+}
+.polaroid-art svg { image-rendering: pixelated; }
+.polaroid-label {
+  text-align: center; margin-top: 12px;
+  font-family: 'Share Tech Mono', monospace; font-size: 12px;
+  letter-spacing: 2px; text-transform: uppercase;
+}
+
+/* ─── TICKER ─── */
+.ticker {
+  background: var(--black); border-top: 3px solid var(--black);
+  border-bottom: 3px solid var(--black); padding: 13px 0; overflow: hidden;
+}
+.ticker-track {
+  display: inline-flex; white-space: nowrap;
+  animation: marquee 22s linear infinite;
+}
+.t-item {
+  font-family: 'Lilita One', cursive; font-size: 15px;
+  color: var(--yellow); text-transform: uppercase; letter-spacing: 2px;
+  padding: 0 28px;
+}
+.t-sep { color: var(--red); }
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+/* ─── FEATURES ─── */
+.features {
+  background: var(--black); padding: 100px 80px;
+}
+.sec-tag {
+  font-family: 'Share Tech Mono', monospace; font-size: 11px;
+  text-transform: uppercase; letter-spacing: 3px;
+  display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+}
+.features .sec-tag { color: var(--yellow); }
+.features .sec-tag::before { content:''; width:28px; height:2px; background: var(--yellow); }
+.sec-h {
+  font-family: 'Lilita One', cursive;
+  font-size: clamp(44px, 6vw, 76px); line-height: 1;
+  margin-bottom: 56px;
+}
+.features .sec-h { color: var(--white); }
+.features .sec-h span { color: var(--yellow); }
+
+.feat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 22px; }
+.feat-card {
+  border: 3px solid var(--yellow); padding: 36px 28px;
+  position: relative; overflow: hidden; transition: transform .2s;
+}
+.feat-card::after {
+  content: ''; position: absolute; inset: 0;
+  background: var(--yellow); transform: scaleY(0); transform-origin: bottom;
+  transition: transform .3s ease; z-index: 0;
+}
+.feat-card:hover::after { transform: scaleY(1); }
+.feat-card:hover .feat-icon,
+.feat-card:hover .feat-title,
+.feat-card:hover .feat-text { color: var(--black); }
+.feat-n {
+  position: absolute; top: 16px; right: 22px;
+  font-family: 'Lilita One', cursive; font-size: 72px;
+  color: rgba(255,229,0,.08); line-height: 1; z-index: 1;
+  transition: color .3s;
+}
+.feat-card:hover .feat-n { color: rgba(0,0,0,.07); }
+.feat-icon {
+  display: block; margin-bottom: 18px;
+  color: var(--yellow); position: relative; z-index: 1;
+  transition: color .2s;
+}
+.feat-title {
+  font-family: 'Lilita One', cursive; font-size: 24px;
+  color: var(--white); text-transform: uppercase;
+  margin-bottom: 10px; position: relative; z-index: 1;
+  transition: color .2s;
+}
+.feat-text {
+  font-size: 14px; line-height: 1.65;
+  color: rgba(255,255,255,.6); position: relative; z-index: 1;
+  transition: color .2s;
+}
+.feat-card:hover .feat-text { color: rgba(0,0,0,.65); }
+
+/* ─── CHARACTERS ─── */
+.chars {
+  background: var(--yellow); padding: 100px 80px;
+  border-top: 3px solid var(--black);
+}
+.chars .sec-tag { color: var(--black); justify-content: center; }
+.chars .sec-tag::before { background: var(--black); }
+.chars-header { text-align: center; margin-bottom: 60px; }
+.chars .sec-h { color: var(--black); text-align: center; }
+.chars .sec-h span { color: var(--red); text-shadow: 4px 4px 0 var(--black); }
+
+.chars-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 22px; }
+.char-card {
+  background: var(--white); border: 3px solid var(--black);
+  box-shadow: 5px 5px 0 var(--black); overflow: hidden;
+  transition: transform .18s, box-shadow .18s;
+}
+.char-card:hover { transform: translate(-4px,-4px); box-shadow: 9px 9px 0 var(--black); }
+.char-portrait {
+  width: 100%; aspect-ratio: 1;
+  display: flex; align-items: center; justify-content: center;
+  border-bottom: 3px solid var(--black);
+}
+.char-portrait svg { image-rendering: pixelated; }
+.char-body { padding: 16px; }
+.char-name {
+  font-family: 'Lilita One', cursive; font-size: 18px;
+  text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px;
+}
+.char-role {
+  font-family: 'Share Tech Mono', monospace; font-size: 11px;
+  text-transform: uppercase; letter-spacing: 2px;
+  color: rgba(0,0,0,.45); margin-bottom: 14px;
+}
+.stats { display: flex; flex-direction: column; gap: 7px; }
+.s-row {
+  display: flex; align-items: center; gap: 8px;
+  font-family: 'Share Tech Mono', monospace; font-size: 10px; text-transform: uppercase;
+}
+.s-label { width: 30px; flex-shrink: 0; }
+.s-track {
+  flex: 1; height: 8px;
+  background: rgba(0,0,0,.08); border: 2px solid var(--black); overflow: hidden;
+}
+.s-fill {
+  height: 100%; background: var(--black);
+  width: 0; transition: width 1s cubic-bezier(.34,1.56,.64,1);
+}
+
+/* ─── PRESS ─── */
+.press {
+  background: var(--yellow); border-top: 3px solid var(--black);
+  border-bottom: 3px solid var(--black);
+  padding: 64px 0; overflow: hidden;
+}
+.press-track {
+  display: flex; gap: 22px;
+  animation: press-roll 30s linear infinite;
+  width: max-content;
+}
+.press-track:hover { animation-play-state: paused; }
+.press-card {
+  background: var(--white); border: 3px solid var(--black);
+  padding: 28px; width: 320px; flex-shrink: 0;
+  box-shadow: 5px 5px 0 var(--black);
+}
+.press-q { font-size: 15px; font-weight: 600; line-height: 1.55; margin-bottom: 14px; }
+.press-score {
+  font-family: 'Lilita One', cursive; font-size: 38px;
+  color: var(--red); text-shadow: 2px 2px 0 var(--black);
+}
+.press-src {
+  font-family: 'Share Tech Mono', monospace; font-size: 10px;
+  text-transform: uppercase; letter-spacing: 2px; color: rgba(0,0,0,.45);
+  margin-top: 4px;
+}
+@keyframes press-roll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+/* ─── ROADMAP ─── */
+.roadmap {
+  background: var(--black); padding: 100px 80px;
+  border-top: 3px solid var(--yellow);
+}
+.roadmap .sec-tag { color: var(--yellow); }
+.roadmap .sec-tag::before { content:''; width:28px; height:2px; background: var(--yellow); }
+.roadmap .sec-h { color: var(--white); }
+.roadmap .sec-h span { color: var(--yellow); }
+
+.rm-grid {
+  display: grid; grid-template-columns: repeat(4,1fr);
+  margin-top: 60px; position: relative;
+}
+.rm-grid::before {
+  content: ''; position: absolute; top: 27px; left: 0; right: 0;
+  height: 3px; background: rgba(255,229,0,.3);
+}
+.rm-item { padding: 0 24px; position: relative; }
+.rm-dot {
+  width: 54px; height: 54px; border: 3px solid rgba(255,229,0,.4);
+  background: var(--black); display: flex; align-items: center;
+  justify-content: center; margin-bottom: 24px;
+  position: relative; z-index: 1;
+}
+.rm-item.done .rm-dot { border-color: var(--yellow); background: var(--yellow); }
+.rm-item.done .rm-dot svg path { fill: var(--black); }
+.rm-q {
+  font-family: 'Share Tech Mono', monospace; font-size: 11px;
+  color: var(--yellow); text-transform: uppercase; letter-spacing: 2px;
+  margin-bottom: 8px;
+}
+.rm-title {
+  font-family: 'Lilita One', cursive; font-size: 20px;
+  color: var(--white); text-transform: uppercase; margin-bottom: 8px;
+}
+.rm-item.done .rm-title { color: var(--yellow); }
+.rm-detail { font-size: 13px; color: rgba(255,255,255,.45); line-height: 1.6; }
+
+/* ─── FOOTER ─── */
+footer {
+  background: var(--black); border-top: 3px solid var(--yellow);
+  padding: 60px 80px 36px;
+}
+.footer-top {
+  display: flex; justify-content: space-between;
+  align-items: flex-start; margin-bottom: 40px;
+}
+.footer-brand {
+  font-family: 'Lilita One', cursive; font-size: 52px;
+  color: var(--yellow); line-height: .95;
+  text-shadow: 4px 4px 0 var(--red);
+}
+.footer-brand span {
+  display: block; font-size: 38px; color: var(--white); text-shadow: none;
+}
+.footer-links { display: flex; gap: 56px; }
+.footer-col h4 {
+  font-family: 'Share Tech Mono', monospace; font-size: 10px;
+  color: var(--yellow); text-transform: uppercase; letter-spacing: 3px;
+  margin-bottom: 14px;
+}
+.footer-col ul { list-style: none; }
+.footer-col li { margin-bottom: 10px; }
+.footer-col a {
+  color: rgba(255,255,255,.5); text-decoration: none;
+  font-size: 14px; font-weight: 500; transition: color .2s;
+}
+.footer-col a:hover { color: var(--yellow); }
+.footer-bottom {
+  border-top: 1px solid rgba(255,229,0,.15); padding-top: 22px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.footer-copy {
+  font-family: 'Share Tech Mono', monospace; font-size: 11px;
+  color: rgba(255,255,255,.25); text-transform: uppercase; letter-spacing: 2px;
+}
+.footer-badge {
+  border: 2px solid var(--yellow); padding: 6px 14px;
+  font-family: 'Lilita One', cursive; font-size: 13px;
+  color: var(--yellow); letter-spacing: 1px;
+}
+
+/* ─── SCROLL REVEAL ─── */
+.reveal {
+  opacity: 0; transform: translateY(28px);
+  transition: opacity .55s ease, transform .55s ease;
+}
+.reveal.in { opacity: 1; transform: none; }
+</style>
+</head>
+<body>
+
+<div id="cursor"></div>
+<div id="cursor-dot"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">
+    <a class="logo-a" href="#">PIXELBYTE</a>
+    <a class="logo-b" href="#">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+      ARCADE
+    </a>
+  </div>
+  <ul class="nav-links">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#characters">Characters</a></li>
+    <li><a href="#press">Press</a></li>
+    <li><a href="#roadmap">Roadmap</a></li>
+  </ul>
+  <a href="#" class="nav-cta">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+    Wishlist
+  </a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-dots"></div>
+  <div class="hero-content">
+    <div class="hero-badge">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      New from Pixelbyte Arcade
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+    </div>
+    <h1 class="hero-title">
+      <span class="title-l1">BLOB</span>
+      <span class="title-l2">BASH</span>
+    </h1>
+    <p class="hero-desc">
+      A 4-player co-op brawler where everything is made of goo and so are the rules.
+      Punch, splat, and ooze through 16 chaotic zones before King Glob absorbs the universe.
+    </p>
+    <div class="hero-btns">
+      <a href="#" class="btn-p">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        Wishlist Now
+      </a>
+      <a href="#" class="btn-s">Watch Goo</a>
+    </div>
+    <p class="hero-meta">Out Fall 2026 &nbsp;&middot;&nbsp; PC + Consoles &nbsp;&middot;&nbsp; Rated G for Goo</p>
+  </div>
+
+  <!-- Polaroid card -->
+  <div class="hero-card">
+    <div class="polaroid">
+      <div class="sticker">He Bites!</div>
+      <div class="polaroid-art">
+        <!-- Pixel art blob character -->
+        <svg width="200" height="200" viewBox="0 0 16 16">
+          <rect x="3" y="1" width="10" height="1" fill="#0a0a0a"/>
+          <rect x="2" y="2" width="12" height="1" fill="#2ecc40"/>
+          <rect x="1" y="2" width="1" height="1" fill="#0a0a0a"/>
+          <rect x="13" y="2" width="1" height="1" fill="#0a0a0a"/>
+          <rect x="1" y="3" width="14" height="1" fill="#2ecc40"/>
+          <rect x="0" y="3" width="1" height="1" fill="#0a0a0a"/>
+          <rect x="15" y="3" width="1" height="1" fill="#0a0a0a"/>
+          <rect x="0" y="4" width="1" height="6" fill="#0a0a0a"/>
+          <rect x="15" y="4" width="1" height="6" fill="#0a0a0a"/>
+          <rect x="1" y="4" width="14" height="1" fill="#2ecc40"/>
+          <!-- eyes row -->
+          <rect x="1" y="5" width="3" height="2" fill="#2ecc40"/>
+          <rect x="4" y="5" width="2" height="2" fill="#0a0a0a"/>
+          <rect x="6" y="5" width="2" height="2" fill="#fff"/>
+          <rect x="8" y="5" width="2" height="2" fill="#0a0a0a"/>
+          <rect x="10" y="5" width="2" height="2" fill="#fff"/>
+          <rect x="12" y="5" width="2" height="2" fill="#0a0a0a"/>
+          <rect x="14" y="5" width="1" height="2" fill="#2ecc40"/>
+          <!-- pupils -->
+          <rect x="7" y="6" width="1" height="1" fill="#0a0a0a"/>
+          <rect x="11" y="6" width="1" height="1" fill="#0a0a0a"/>
+          <!-- body -->
+          <rect x="1" y="7" width="14" height="1" fill="#2ecc40"/>
+          <!-- smile -->
+          <rect x="1" y="8" width="14" height="1" fill="#2ecc40"/>
+          <rect x="4" y="8" width="1" height="1" fill="#0a0a0a"/>
+          <rect x="5" y="8" width="6" height="1" fill="#fff"/>
+          <rect x="11" y="8" width="1" height="1" fill="#0a0a0a"/>
+          <!-- teeth -->
+          <rect x="5" y="9" width="2" height="1" fill="#fff"/>
+          <rect x="7" y="9" width="2" height="1" fill="#0a0a0a"/>
+          <rect x="9" y="9" width="2" height="1" fill="#fff"/>
+          <rect x="1" y="9" width="3" height="1" fill="#2ecc40"/>
+          <rect x="12" y="9" width="3" height="1" fill="#2ecc40"/>
+          <!-- chin -->
+          <rect x="1" y="10" width="14" height="1" fill="#2ecc40"/>
+          <rect x="2" y="11" width="12" height="1" fill="#2ecc40"/>
+          <rect x="1" y="11" width="1" height="1" fill="#0a0a0a"/>
+          <rect x="14" y="11" width="1" height="1" fill="#0a0a0a"/>
+          <!-- legs -->
+          <rect x="2" y="12" width="5" height="1" fill="#1aab2e"/>
+          <rect x="9" y="12" width="5" height="1" fill="#1aab2e"/>
+          <rect x="1" y="12" width="1" height="1" fill="#0a0a0a"/>
+          <rect x="7" y="12" width="2" height="1" fill="#0a0a0a"/>
+          <rect x="14" y="12" width="1" height="1" fill="#0a0a0a"/>
+          <rect x="2" y="13" width="5" height="1" fill="#1aab2e"/>
+          <rect x="9" y="13" width="5" height="1" fill="#1aab2e"/>
+          <rect x="1" y="13" width="1" height="1" fill="#0a0a0a"/>
+          <rect x="7" y="13" width="2" height="1" fill="#0a0a0a"/>
+          <rect x="14" y="13" width="1" height="1" fill="#0a0a0a"/>
+          <rect x="2" y="14" width="5" height="1" fill="#0a0a0a"/>
+          <rect x="9" y="14" width="5" height="1" fill="#0a0a0a"/>
+        </svg>
+      </div>
+      <div class="polaroid-label">GLOOB &middot; BLOB #001</div>
+    </div>
+  </div>
+</section>
+
+<!-- TICKER -->
+<div class="ticker">
+  <div class="ticker-track">
+    <span class="t-item">BLOB BASH <span class="t-sep">&#9733;</span></span>
+    <span class="t-item">4-PLAYER CO-OP <span class="t-sep">&#9733;</span></span>
+    <span class="t-item">16 CHAOS LEVELS <span class="t-sep">&#9733;</span></span>
+    <span class="t-item">PC + CONSOLES <span class="t-sep">&#9733;</span></span>
+    <span class="t-item">FALL 2026 <span class="t-sep">&#9733;</span></span>
+    <span class="t-item">RATED G FOR GOO <span class="t-sep">&#9733;</span></span>
+    <span class="t-item">WISHLIST NOW <span class="t-sep">&#9733;</span></span>
+    <span class="t-item">BLOB BASH <span class="t-sep">&#9733;</span></span>
+    <span class="t-item">4-PLAYER CO-OP <span class="t-sep">&#9733;</span></span>
+    <span class="t-item">16 CHAOS LEVELS <span class="t-sep">&#9733;</span></span>
+    <span class="t-item">PC + CONSOLES <span class="t-sep">&#9733;</span></span>
+    <span class="t-item">FALL 2026 <span class="t-sep">&#9733;</span></span>
+    <span class="t-item">RATED G FOR GOO <span class="t-sep">&#9733;</span></span>
+    <span class="t-item">WISHLIST NOW <span class="t-sep">&#9733;</span></span>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<section class="features" id="features">
+  <p class="sec-tag reveal">Game Features</p>
+  <h2 class="sec-h reveal">WHY IT <span>SLAPS</span></h2>
+  <div class="feat-grid">
+    <div class="feat-card reveal">
+      <span class="feat-n">01</span>
+      <svg class="feat-icon" width="38" height="38" viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 3-1.34 3-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+      <h3 class="feat-title">4-Player Co-op</h3>
+      <p class="feat-text">Team up locally or online. Coordinate your goo attacks or just smash everything — both strategies are equally valid.</p>
+    </div>
+    <div class="feat-card reveal">
+      <span class="feat-n">02</span>
+      <svg class="feat-icon" width="38" height="38" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
+      <h3 class="feat-title">16 Goo Zones</h3>
+      <p class="feat-text">From the Goo Sewers to the Slime Towers, every level drips with unique mechanics that change how you fight.</p>
+    </div>
+    <div class="feat-card reveal">
+      <span class="feat-n">03</span>
+      <svg class="feat-icon" width="38" height="38" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2.05v2.02c3.95.49 7 3.85 7 7.93 0 3.21-1.81 6-4.72 7.28L13 17v5h5l-1.22-1.22C19.91 19.07 22 15.76 22 12c0-5.18-3.95-9.45-9-9.95zM11 2.05C5.95 2.55 2 6.82 2 12c0 3.76 2.09 7.07 5.22 8.78L6 22h5v-5l-2.28 2.28C6.81 18 5 15.21 5 12c0-4.08 3.05-7.44 7-7.93V2.05z"/></svg>
+      <h3 class="feat-title">Goo Finishers</h3>
+      <p class="feat-text">48 unique moves, chain combos, and unleash devastating Goo Finishers that drown the screen in beautiful chaos.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CHARACTERS -->
+<section class="chars" id="characters">
+  <div class="chars-header">
+    <p class="sec-tag">Meet the Squad</p>
+    <h2 class="sec-h chars-h">THE <span>BLOBS</span></h2>
+  </div>
+  <div class="chars-grid">
+
+    <div class="char-card reveal">
+      <div class="char-portrait" style="background:#3d9bff;">
+        <svg width="110" height="110" viewBox="0 0 10 10">
+          <rect x="2" y="0" width="6" height="1" fill="#0a0a0a"/>
+          <rect x="1" y="1" width="8" height="7" fill="#2ecc40"/>
+          <rect x="0" y="2" width="1" height="5" fill="#0a0a0a"/>
+          <rect x="9" y="2" width="1" height="5" fill="#0a0a0a"/>
+          <rect x="2" y="3" width="2" height="2" fill="#fff"/>
+          <rect x="6" y="3" width="2" height="2" fill="#fff"/>
+          <rect x="3" y="4" width="1" height="1" fill="#0a0a0a"/>
+          <rect x="7" y="4" width="1" height="1" fill="#0a0a0a"/>
+          <rect x="3" y="6" width="4" height="1" fill="#0a0a0a"/>
+          <rect x="1" y="8" width="3" height="1" fill="#1aab2e"/>
+          <rect x="6" y="8" width="3" height="1" fill="#1aab2e"/>
+          <rect x="1" y="9" width="3" height="1" fill="#0a0a0a"/>
+          <rect x="6" y="9" width="3" height="1" fill="#0a0a0a"/>
+        </svg>
+      </div>
+      <div class="char-body">
+        <div class="char-name">GLOOB</div>
+        <div class="char-role">The Tank · Blob #001</div>
+        <div class="stats">
+          <div class="s-row"><span class="s-label">STR</span><div class="s-track"><div class="s-fill" data-w="90"></div></div></div>
+          <div class="s-row"><span class="s-label">SPD</span><div class="s-track"><div class="s-fill" data-w="40"></div></div></div>
+          <div class="s-row"><span class="s-label">GOO</span><div class="s-track"><div class="s-fill" data-w="75"></div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="char-card reveal">
+      <div class="char-portrait" style="background:#ff5555;">
+        <svg width="110" height="110" viewBox="0 0 10 10">
+          <rect x="2" y="0" width="6" height="1" fill="#0a0a0a"/>
+          <rect x="1" y="1" width="8" height="7" fill="#ff2d55"/>
+          <rect x="0" y="2" width="1" height="5" fill="#0a0a0a"/>
+          <rect x="9" y="2" width="1" height="5" fill="#0a0a0a"/>
+          <rect x="2" y="3" width="2" height="2" fill="#fff"/>
+          <rect x="6" y="3" width="2" height="2" fill="#fff"/>
+          <rect x="3" y="4" width="1" height="1" fill="#0a0a0a"/>
+          <rect x="7" y="4" width="1" height="1" fill="#0a0a0a"/>
+          <rect x="3" y="6" width="4" height="1" fill="#0a0a0a"/>
+          <rect x="1" y="8" width="3" height="1" fill="#b01f3b"/>
+          <rect x="6" y="8" width="3" height="1" fill="#b01f3b"/>
+          <rect x="1" y="9" width="3" height="1" fill="#0a0a0a"/>
+          <rect x="6" y="9" width="3" height="1" fill="#0a0a0a"/>
+        </svg>
+      </div>
+      <div class="char-body">
+        <div class="char-name">SPLATTY</div>
+        <div class="char-role">The Speedster · Blob #002</div>
+        <div class="stats">
+          <div class="s-row"><span class="s-label">STR</span><div class="s-track"><div class="s-fill" data-w="50"></div></div></div>
+          <div class="s-row"><span class="s-label">SPD</span><div class="s-track"><div class="s-fill" data-w="95"></div></div></div>
+          <div class="s-row"><span class="s-label">GOO</span><div class="s-track"><div class="s-fill" data-w="60"></div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="char-card reveal">
+      <div class="char-portrait" style="background:#9b59b6;">
+        <svg width="110" height="110" viewBox="0 0 10 10">
+          <rect x="2" y="0" width="6" height="1" fill="#0a0a0a"/>
+          <rect x="1" y="1" width="8" height="7" fill="#8e44ad"/>
+          <rect x="0" y="2" width="1" height="5" fill="#0a0a0a"/>
+          <rect x="9" y="2" width="1" height="5" fill="#0a0a0a"/>
+          <rect x="2" y="3" width="2" height="2" fill="#fff"/>
+          <rect x="6" y="3" width="2" height="2" fill="#fff"/>
+          <rect x="3" y="4" width="1" height="1" fill="#0a0a0a"/>
+          <rect x="7" y="4" width="1" height="1" fill="#0a0a0a"/>
+          <rect x="3" y="6" width="4" height="1" fill="#0a0a0a"/>
+          <rect x="1" y="8" width="3" height="1" fill="#6c3483"/>
+          <rect x="6" y="8" width="3" height="1" fill="#6c3483"/>
+          <rect x="1" y="9" width="3" height="1" fill="#0a0a0a"/>
+          <rect x="6" y="9" width="3" height="1" fill="#0a0a0a"/>
+        </svg>
+      </div>
+      <div class="char-body">
+        <div class="char-name">OOZARA</div>
+        <div class="char-role">The Mage · Blob #003</div>
+        <div class="stats">
+          <div class="s-row"><span class="s-label">STR</span><div class="s-track"><div class="s-fill" data-w="35"></div></div></div>
+          <div class="s-row"><span class="s-label">SPD</span><div class="s-track"><div class="s-fill" data-w="65"></div></div></div>
+          <div class="s-row"><span class="s-label">GOO</span><div class="s-track"><div class="s-fill" data-w="100"></div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="char-card reveal">
+      <div class="char-portrait" style="background:#f39c12;">
+        <svg width="110" height="110" viewBox="0 0 10 10">
+          <rect x="2" y="0" width="6" height="1" fill="#0a0a0a"/>
+          <rect x="1" y="1" width="8" height="7" fill="#f1c40f"/>
+          <rect x="0" y="2" width="1" height="5" fill="#0a0a0a"/>
+          <rect x="9" y="2" width="1" height="5" fill="#0a0a0a"/>
+          <rect x="2" y="3" width="2" height="2" fill="#fff"/>
+          <rect x="6" y="3" width="2" height="2" fill="#fff"/>
+          <rect x="3" y="4" width="1" height="1" fill="#0a0a0a"/>
+          <rect x="7" y="4" width="1" height="1" fill="#0a0a0a"/>
+          <rect x="3" y="6" width="4" height="1" fill="#0a0a0a"/>
+          <rect x="1" y="8" width="3" height="1" fill="#b7950b"/>
+          <rect x="6" y="8" width="3" height="1" fill="#b7950b"/>
+          <rect x="1" y="9" width="3" height="1" fill="#0a0a0a"/>
+          <rect x="6" y="9" width="3" height="1" fill="#0a0a0a"/>
+        </svg>
+      </div>
+      <div class="char-body">
+        <div class="char-name">BLOBZILLA</div>
+        <div class="char-role">The Boss · Blob #???</div>
+        <div class="stats">
+          <div class="s-row"><span class="s-label">STR</span><div class="s-track"><div class="s-fill" data-w="100"></div></div></div>
+          <div class="s-row"><span class="s-label">SPD</span><div class="s-track"><div class="s-fill" data-w="70"></div></div></div>
+          <div class="s-row"><span class="s-label">GOO</span><div class="s-track"><div class="s-fill" data-w="100"></div></div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- PRESS -->
+<section class="press" id="press">
+  <div class="press-track">
+    <div class="press-card"><p class="press-q">"The most disgusting fun I've had in years. I need a shower and a sequel."</p><div class="press-score">9.5</div><div class="press-src">Game Slime Weekly</div></div>
+    <div class="press-card"><p class="press-q">"Finally, a co-op brawler that rewards chaos as much as teamwork."</p><div class="press-score">9.0</div><div class="press-src">Pixel Press</div></div>
+    <div class="press-card"><p class="press-q">"Every pixel oozes with personality. Gloob is my new best friend."</p><div class="press-score">8.8</div><div class="press-src">Retro Gamer Mag</div></div>
+    <div class="press-card"><p class="press-q">"Blob Bash is what happens when you give geniuses too much time and goo."</p><div class="press-score">9.2</div><div class="press-src">IndieSpot</div></div>
+    <div class="press-card"><p class="press-q">"The most disgusting fun I've had in years. I need a shower and a sequel."</p><div class="press-score">9.5</div><div class="press-src">Game Slime Weekly</div></div>
+    <div class="press-card"><p class="press-q">"Finally, a co-op brawler that rewards chaos as much as teamwork."</p><div class="press-score">9.0</div><div class="press-src">Pixel Press</div></div>
+    <div class="press-card"><p class="press-q">"Every pixel oozes with personality. Gloob is my new best friend."</p><div class="press-score">8.8</div><div class="press-src">Retro Gamer Mag</div></div>
+    <div class="press-card"><p class="press-q">"Blob Bash is what happens when you give geniuses too much time and goo."</p><div class="press-score">9.2</div><div class="press-src">IndieSpot</div></div>
+  </div>
+</section>
+
+<!-- ROADMAP -->
+<section class="roadmap" id="roadmap">
+  <p class="sec-tag reveal">Development</p>
+  <h2 class="sec-h reveal">THE <span>ROADMAP</span></h2>
+  <div class="rm-grid">
+    <div class="rm-item done reveal">
+      <div class="rm-dot">
+        <svg width="24" height="24" viewBox="0 0 24 24"><path fill="#0a0a0a" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+      </div>
+      <div class="rm-q">Q1 2026</div>
+      <div class="rm-title">Alpha Build</div>
+      <div class="rm-detail">Core combat, 4 playable blobs, 3 test zones. Internal testing live.</div>
+    </div>
+    <div class="rm-item done reveal">
+      <div class="rm-dot">
+        <svg width="24" height="24" viewBox="0 0 24 24"><path fill="#0a0a0a" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+      </div>
+      <div class="rm-q">Q2 2026</div>
+      <div class="rm-title">Beta Access</div>
+      <div class="rm-detail">Wishlist backers get early access. All 16 zones + online multiplayer.</div>
+    </div>
+    <div class="rm-item reveal">
+      <div class="rm-dot">
+        <svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5" fill="rgba(255,229,0,.35)"/></svg>
+      </div>
+      <div class="rm-q">Q3 2026</div>
+      <div class="rm-title">Gold Master</div>
+      <div class="rm-detail">Final polish, console cert, launch trailer, press embargo lifts.</div>
+    </div>
+    <div class="rm-item reveal">
+      <div class="rm-dot">
+        <svg width="24" height="24" viewBox="0 0 24 24"><path fill="rgba(255,229,0,.35)" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      </div>
+      <div class="rm-q">Q4 2026</div>
+      <div class="rm-title">Launch Day</div>
+      <div class="rm-detail">Global release on PC, PS5, Xbox Series &amp; Switch. Time to bash!</div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-top">
+    <div class="footer-brand">
+      BLOB
+      <span>BASH</span>
+    </div>
+    <div class="footer-links">
+      <div class="footer-col">
+        <h4>Game</h4>
+        <ul>
+          <li><a href="#">Features</a></li>
+          <li><a href="#">Characters</a></li>
+          <li><a href="#">Screenshots</a></li>
+          <li><a href="#">Trailer</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Studio</h4>
+        <ul>
+          <li><a href="#">About Pixelbyte</a></li>
+          <li><a href="#">Press Kit</a></li>
+          <li><a href="#">Roadmap</a></li>
+          <li><a href="#">Careers</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Community</h4>
+        <ul>
+          <li><a href="#">Discord</a></li>
+          <li><a href="#">Twitter / X</a></li>
+          <li><a href="#">TikTok</a></li>
+          <li><a href="#">Newsletter</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p class="footer-copy">&copy; 2026 Pixelbyte Arcade &middot; All Rights Reserved</p>
+    <div class="footer-badge">RATED G FOR GOO</div>
+  </div>
+</footer>
+
+<script>
+/* ── Custom cursor ── */
+const cur = document.getElementById('cursor');
+const dot = document.getElementById('cursor-dot');
+let mx=0, my=0, cx=0, cy=0;
+
+document.addEventListener('mousemove', e => { mx=e.clientX; my=e.clientY; dot.style.cssText=`left:${mx}px;top:${my}px`; });
+
+(function loop(){ cx+=(mx-cx)*.14; cy+=(my-cy)*.14; cur.style.cssText=`left:${cx}px;top:${cy}px`; requestAnimationFrame(loop); })();
+
+document.querySelectorAll('a,button').forEach(el=>{
+  el.addEventListener('mouseenter',()=>document.body.classList.add('hovering'));
+  el.addEventListener('mouseleave',()=>document.body.classList.remove('hovering'));
+});
+
+/* ── Scroll reveal ── */
+const ro = new IntersectionObserver(entries=>{
+  entries.forEach((e,i)=>{
+    if(e.isIntersecting) setTimeout(()=>e.target.classList.add('in'), parseInt(e.target.dataset.delay||0));
+  });
+},{threshold:.15});
+
+document.querySelectorAll('.reveal').forEach((el,i)=>{
+  el.dataset.delay = (i%4)*90;
+  ro.observe(el);
+});
+
+/* ── Stat bars ── */
+const so = new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      e.target.querySelectorAll('.s-fill').forEach(f=>{ f.style.width=f.dataset.w+'%'; });
+      so.unobserve(e.target);
+    }
+  });
+},{threshold:.3});
+document.querySelectorAll('.char-card').forEach(c=>so.observe(c));
+
+/* ── Nav active highlight on scroll ── */
+const sections = document.querySelectorAll('section[id]');
+const navLinks = document.querySelectorAll('.nav-links a');
+window.addEventListener('scroll', ()=>{
+  let cur='';
+  sections.forEach(s=>{ if(window.scrollY>=s.offsetTop-120) cur=s.id; });
+  navLinks.forEach(a=>{ a.style.background = a.getAttribute('href')==='#'+cur ? 'var(--black)' : ''; a.style.color = a.getAttribute('href')==='#'+cur ? 'var(--yellow)' : ''; });
+});
+</script>
+</body>
+</html>
