@@ -2,7 +2,64 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import WishlistModal from './WishlistModal';
 import BetaGame from './BetaGame';
-import { BlobSvg } from './Hero';
+
+function IQGameLogo({ size = 44 }: { size?: number }) {
+  const P = '#c44dff'; // violet cerveau
+  const D = '#7b00c9'; // ombre
+  const K = '#0a0a0a'; // contour
+  const W = '#ffffff'; // reflet
+  const Y = '#FFE500'; // jaune sparks
+  const R = '#ff2d55'; // rouge accents
+  return (
+    <svg width={size} height={size} viewBox="0 0 14 14" style={{ imageRendering: 'pixelated' }}>
+      {/* lobe gauche - contour */}
+      <rect x="1" y="1" width="4" height="1" fill={K}/>
+      <rect x="0" y="2" width="1" height="3" fill={K}/>
+      <rect x="1" y="5" width="3" height="1" fill={K}/>
+      <rect x="4" y="4" width="1" height="1" fill={K}/>
+      {/* lobe gauche - remplissage */}
+      <rect x="1" y="2" width="4" height="3" fill={P}/>
+      <rect x="1" y="2" width="1" height="1" fill={W}/>
+      <rect x="3" y="3" width="1" height="1" fill={D}/>
+      {/* lobe droit - contour */}
+      <rect x="9" y="1" width="4" height="1" fill={K}/>
+      <rect x="13" y="2" width="1" height="3" fill={K}/>
+      <rect x="10" y="5" width="3" height="1" fill={K}/>
+      <rect x="9" y="4" width="1" height="1" fill={K}/>
+      {/* lobe droit - remplissage */}
+      <rect x="9" y="2" width="4" height="3" fill={P}/>
+      <rect x="12" y="2" width="1" height="1" fill={W}/>
+      <rect x="10" y="3" width="1" height="1" fill={D}/>
+      {/* sillon central (ligne de séparation des hémisphères) */}
+      <rect x="5" y="1" width="4" height="1" fill={K}/>
+      <rect x="6" y="2" width="2" height="3" fill={K}/>
+      <rect x="5" y="5" width="4" height="1" fill={K}/>
+      {/* corps bas du cerveau */}
+      <rect x="0" y="6" width="14" height="1" fill={K}/>
+      <rect x="0" y="7" width="1" height="4" fill={K}/>
+      <rect x="13" y="7" width="1" height="4" fill={K}/>
+      <rect x="1" y="7" width="12" height="4" fill={P}/>
+      <rect x="0" y="11" width="14" height="1" fill={K}/>
+      {/* ride centrale continue */}
+      <rect x="6" y="7" width="2" height="4" fill={D}/>
+      {/* rides latérales */}
+      <rect x="3" y="8" width="1" height="2" fill={D}/>
+      <rect x="10" y="8" width="1" height="2" fill={D}/>
+      {/* sparks IQ jaunes - neurones actifs */}
+      <rect x="2" y="7" width="1" height="1" fill={Y}/>
+      <rect x="4" y="9" width="1" height="1" fill={Y}/>
+      <rect x="9" y="7" width="1" height="1" fill={Y}/>
+      <rect x="11" y="9" width="1" height="1" fill={Y}/>
+      {/* point rouge - signal jeu (bouton A) */}
+      <rect x="2" y="10" width="1" height="1" fill={R}/>
+      <rect x="11" y="7" width="1" height="1" fill={R}/>
+      {/* bas arrondi */}
+      <rect x="1" y="12" width="1" height="1" fill={K}/>
+      <rect x="12" y="12" width="1" height="1" fill={K}/>
+      <rect x="2" y="12" width="10" height="1" fill={D}/>
+    </svg>
+  );
+}
 
 const links = [
   { href: '#features', label: 'Features' },
@@ -33,7 +90,7 @@ export default function Navbar() {
       <nav className="nav">
         <a className="nav-logo" href="#">
           <div className="nav-logo-icon">
-            <BlobSvg color="#2ecc40" dark="#1aab2e" size={30} />
+            <IQGameLogo size={36} />
           </div>
           <div className="nav-logo-text">
             <span className="nav-logo-title">BLOB BASH</span>
