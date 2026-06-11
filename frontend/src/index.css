@@ -608,59 +608,90 @@ footer { background: var(--black); border-top: 3px solid var(--yellow); padding:
 .gs-cta-outline:hover { background: rgba(255,255,255,.08); transform: none; box-shadow: none; }
 
 /* Character Select Screen */
-.cs-box { max-width: 580px; width: 100%; gap: 12px; }
-.cs-panels {
-  display: flex; align-items: flex-start; gap: 0; width: 100%;
+.cs-screen { align-items: center; background: rgba(0,0,0,.92) !important; }
+.cs-wrap {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 16px; padding: 24px 20px; width: 100%; max-width: 520px;
+  text-align: center;
 }
-.cs-panel { flex: 1; display: flex; flex-direction: column; gap: 8px; }
-.cs-panel-header {
+
+/* Player header row */
+.cs-players-row {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 7px 10px; border: 2px solid; border-bottom: none;
-  background: rgba(255,255,255,.04);
+  width: 100%; gap: 8px;
 }
-.cs-panel-badge {
-  font-family: 'Lilita One', cursive; font-size: 13px;
-  color: #000; padding: 2px 10px; letter-spacing: 1px;
+.cs-player-label {
+  display: flex; align-items: center; gap: 8px; flex: 1;
 }
-.cs-panel-keys {
-  font-family: 'Share Tech Mono', monospace; font-size: 11px;
-  color: rgba(255,255,255,.45);
+.cs-player-label-r { justify-content: flex-end; }
+.cs-pl-badge {
+  font-family: 'Lilita One', cursive; font-size: 12px;
+  color: #000; padding: 3px 10px; letter-spacing: 1px; flex-shrink: 0;
 }
+.cs-pl-name {
+  font-family: 'Lilita One', cursive; font-size: 14px;
+  text-transform: uppercase; letter-spacing: 1px;
+}
+.cs-pl-keys {
+  font-family: 'Share Tech Mono', monospace; font-size: 10px;
+  color: rgba(255,255,255,.4); white-space: nowrap;
+}
+.cs-vs-mid {
+  font-family: 'Lilita One', cursive; font-size: 20px;
+  color: rgba(255,229,0,.7); flex-shrink: 0;
+}
+
+/* Character grid — 4 cards in a row */
 .cs-grid {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
-  padding: 8px;
-  border: 2px solid rgba(255,255,255,.1);
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 10px; width: 100%;
 }
+.cs-card-wrap { position: relative; }
 .cs-card {
-  display: flex; flex-direction: column; align-items: center; gap: 5px;
-  padding: 10px 6px; background: rgba(255,255,255,.04);
-  border: 2px solid transparent;
-  transition: border-color .15s, background .15s, transform .1s;
+  position: relative;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 14px 8px 10px; width: 100%;
+  background: rgba(255,255,255,.05);
+  border: 2px solid rgba(255,255,255,.1);
+  transition: border-color .15s, background .15s, transform .12s;
   cursor: pointer;
 }
 .cs-card:hover {
-  border-color: var(--cs-color, rgba(255,229,0,.5));
-  background: rgba(255,255,255,.08);
-  transform: translateY(-2px);
+  border-color: var(--cs-color);
+  background: rgba(255,255,255,.09);
+  transform: translateY(-3px);
 }
-.cs-card-active {
-  border-color: var(--cs-color, #FFE500) !important;
+.cs-card-sel {
+  border-color: var(--cs-color) !important;
   background: rgba(255,255,255,.1) !important;
-  box-shadow: 0 0 12px -2px var(--cs-color, #FFE500);
+  box-shadow: 0 4px 18px -4px var(--cs-color);
 }
 .cs-blob {
   display: flex; align-items: center; justify-content: center;
-  filter: drop-shadow(0 2px 6px var(--cs-color, #fff));
+  filter: drop-shadow(0 3px 8px var(--cs-color, rgba(255,255,255,.3)));
 }
 .cs-name {
-  font-family: 'Lilita One', cursive; font-size: 10px;
-  color: rgba(255,255,255,.8); text-transform: uppercase; letter-spacing: 1px;
+  font-family: 'Lilita One', cursive; font-size: 11px;
+  color: #fff; text-transform: uppercase; letter-spacing: 1px;
 }
-.cs-divider {
-  display: flex; align-items: center; justify-content: center;
-  padding: 0 10px; padding-top: 48px;
-  font-family: 'Lilita One', cursive; font-size: 18px;
-  color: rgba(255,229,0,.6);
+.cs-role {
+  font-family: 'Share Tech Mono', monospace; font-size: 9px;
+  color: rgba(255,255,255,.4); text-transform: uppercase; letter-spacing: .5px;
+}
+
+/* P1 / P2 selection badges on card */
+.cs-sel-badge {
+  position: absolute; top: -1px; left: -1px;
+  font-family: 'Lilita One', cursive; font-size: 10px;
+  color: #000; padding: 1px 7px; z-index: 2; letter-spacing: .5px;
+}
+.cs-sel-p2 { left: auto; right: -1px; top: -1px; }
+.cs-sel-p2-offset { top: 22px; }
+
+.cs-hint {
+  font-family: 'Share Tech Mono', monospace; font-size: 10px;
+  color: rgba(255,255,255,.35); letter-spacing: 1px; text-transform: uppercase;
+  margin: 0;
 }
 
 /* IQ Result Screen */
