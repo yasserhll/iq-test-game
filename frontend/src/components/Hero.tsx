@@ -8,6 +8,15 @@ const easeSpring = { type: 'spring', stiffness: 260, damping: 22 } as const;
 export default function Hero() {
   const [modalOpen, setModalOpen] = useState(false);
   const [betaOpen, setBetaOpen] = useState(false);
+  const [mobileWarn, setMobileWarn] = useState(false);
+
+  const handleBeta = () => {
+    if (window.innerWidth < 1024 || 'ontouchstart' in window) {
+      setMobileWarn(true);
+    } else {
+      setBetaOpen(true);
+    }
+  };
 
   return (
     <>
@@ -55,8 +64,8 @@ export default function Hero() {
             animate={{ y: 0, opacity: 1 }}
             transition={{ ease: 'easeOut', duration: 0.6, delay: 0.52 }}
           >
-            A 4-player co-op brawler where everything is made of goo and so are the rules.
-            Punch, splat, and ooze through 16 chaotic zones before King Glob absorbs the universe.
+            A 2-player IQ maze challenge. Race your blob through 3 pixel labyrinths —
+            your speed and path efficiency are measured to calculate your real Spatial IQ score.
           </motion.p>
 
           <motion.div
@@ -71,8 +80,8 @@ export default function Hero() {
               </svg>
               Wishlist Now
             </button>
-            <a href="#features" className="btn-s">Watch Goo</a>
-            <button className="btn-beta" onClick={() => setBetaOpen(true)}>
+            <a href="#features" className="btn-s">How It Works</a>
+            <button className="btn-beta" onClick={handleBeta}>
               <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 7H8v3H6v-3H3v-2h3V8h2v3h3v2zm4.5 2c-.83 0-1.5-.67-1.5-1.5S14.67 12 15.5 12s1.5.67 1.5 1.5S16.33 15 15.5 15zm3-3c-.83 0-1.5-.67-1.5-1.5S17.67 9 18.5 9s1.5.67 1.5 1.5S19.33 12 18.5 12z" />
               </svg>
@@ -86,7 +95,7 @@ export default function Hero() {
             animate={{ opacity: 0.6 }}
             transition={{ duration: 0.6, delay: 0.8 }}
           >
-            Out Fall 2026 &nbsp;&middot;&nbsp; PC + Consoles &nbsp;&middot;&nbsp; Rated G for Goo
+            Out Fall 2026 &nbsp;&middot;&nbsp; PC Only &nbsp;&middot;&nbsp; IQ Testing Disguised as a Game
           </motion.p>
         </div>
 
@@ -106,6 +115,37 @@ export default function Hero() {
           </div>
         </motion.div>
       </section>
+
+      {/* Mobile warning overlay */}
+      <AnimatePresence>
+        {mobileWarn && (
+          <motion.div
+            className="modal-overlay"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={() => setMobileWarn(false)}
+          >
+            <motion.div
+              className="modal mobile-warn-modal"
+              initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+              onClick={e => e.stopPropagation()}
+            >
+              <button className="modal-close" onClick={() => setMobileWarn(false)}>&#x2715;</button>
+              <div className="mobile-warn-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M20 18c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z"/>
+                </svg>
+              </div>
+              <h2>PC Required</h2>
+              <p>The IQ Maze Challenge requires a physical keyboard to play.<br />Open this page on a desktop or laptop to take the test.</p>
+              <button className="modal-submit" style={{ marginTop: 16 }} onClick={() => setMobileWarn(false)}>
+                Got it
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {modalOpen && <WishlistModal onClose={() => setModalOpen(false)} />}
