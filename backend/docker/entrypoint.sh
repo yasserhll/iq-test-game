@@ -1,6 +1,13 @@
 #!/bin/bash
 set -e
 
+# Ensure SQLite data directory exists (on volume /data)
+if [ "$DB_CONNECTION" = "sqlite" ]; then
+  mkdir -p "$(dirname "${DB_DATABASE:-/var/www/html/database/database.sqlite}")"
+  touch "${DB_DATABASE:-/var/www/html/database/database.sqlite}"
+  chown www-data:www-data "${DB_DATABASE:-/var/www/html/database/database.sqlite}"
+fi
+
 # Generate app key if not set
 if [ -z "$APP_KEY" ]; then
   php artisan key:generate --force
