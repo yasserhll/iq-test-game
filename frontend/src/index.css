@@ -607,6 +607,62 @@ footer { background: var(--black); border-top: 3px solid var(--yellow); padding:
 }
 .gs-cta-outline:hover { background: rgba(255,255,255,.08); transform: none; box-shadow: none; }
 
+/* Character Select Screen */
+.cs-box { max-width: 580px; width: 100%; gap: 12px; }
+.cs-panels {
+  display: flex; align-items: flex-start; gap: 0; width: 100%;
+}
+.cs-panel { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.cs-panel-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 7px 10px; border: 2px solid; border-bottom: none;
+  background: rgba(255,255,255,.04);
+}
+.cs-panel-badge {
+  font-family: 'Lilita One', cursive; font-size: 13px;
+  color: #000; padding: 2px 10px; letter-spacing: 1px;
+}
+.cs-panel-keys {
+  font-family: 'Share Tech Mono', monospace; font-size: 11px;
+  color: rgba(255,255,255,.45);
+}
+.cs-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+  padding: 8px;
+  border: 2px solid rgba(255,255,255,.1);
+}
+.cs-card {
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+  padding: 10px 6px; background: rgba(255,255,255,.04);
+  border: 2px solid transparent;
+  transition: border-color .15s, background .15s, transform .1s;
+  cursor: pointer;
+}
+.cs-card:hover {
+  border-color: var(--cs-color, rgba(255,229,0,.5));
+  background: rgba(255,255,255,.08);
+  transform: translateY(-2px);
+}
+.cs-card-active {
+  border-color: var(--cs-color, #FFE500) !important;
+  background: rgba(255,255,255,.1) !important;
+  box-shadow: 0 0 12px -2px var(--cs-color, #FFE500);
+}
+.cs-blob {
+  display: flex; align-items: center; justify-content: center;
+  filter: drop-shadow(0 2px 6px var(--cs-color, #fff));
+}
+.cs-name {
+  font-family: 'Lilita One', cursive; font-size: 10px;
+  color: rgba(255,255,255,.8); text-transform: uppercase; letter-spacing: 1px;
+}
+.cs-divider {
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 10px; padding-top: 48px;
+  font-family: 'Lilita One', cursive; font-size: 18px;
+  color: rgba(255,229,0,.6);
+}
+
 /* IQ Result Screen */
 .gs-iq-box { max-width: 420px; width: 100%; }
 .gs-iq-number {
